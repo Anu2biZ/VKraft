@@ -143,9 +143,13 @@ bot.command('echo', async (ctx) => {
 ### Работа с медиа-контентом
 
 ```javascript
-// Отправка изображения
+// Отправка изображения (поддерживаются как URL, так и локальные файлы)
 bot.command('image', async (ctx) => {
-    await bot.sendImg(ctx.peerId, 'photo123_456');
+    // Использование URL
+    await bot.sendImg(ctx.peerId, 'https://example.com/image.jpg');
+    
+    // Использование локального файла
+    await bot.sendImg(ctx.peerId, './images/local-image.jpg');
 });
 
 // Отправка видео
@@ -153,10 +157,36 @@ bot.command('video', async (ctx) => {
     await bot.sendVideo(ctx.peerId, 'video123_456');
 });
 
-// Отправка изображения с клавиатурой
+// Отправка изображения с текстом и клавиатурой
 bot.command('media', async (ctx) => {
-    await bot.sendImg(ctx.peerId, 'photo123_456', 'main'); // main - имя клавиатуры
+    // URL или путь к файлу
+    const imageSource = process.env.NODE_ENV === 'production'
+        ? 'https://example.com/image.jpg'
+        : './images/local-image.jpg';
+    
+    await bot.sendImgWithText(
+        ctx.peerId,
+        'Описание изображения',
+        imageSource,
+        'main' // имя клавиатуры
+    );
 });
+```
+
+#### Поддержка изображений
+Бот поддерживает два способа отправки изображений:
+1. **URL изображения** - прямая ссылка на изображение в интернете
+2. **Локальный файл** - путь к файлу на сервере
+
+В production режиме рекомендуется использовать URL, так как они более надежны и не зависят от структуры файлов на сервере. В development режиме удобно использовать локальные файлы для тестирования.
+
+Пример использования в зависимости от режима:
+```javascript
+const imageSource = process.env.NODE_ENV === 'production'
+    ? 'https://example.com/image.jpg'
+    : './images/local-image.jpg';
+
+await bot.sendImg(ctx.peerId, imageSource);
 ```
 
 ### Пример с состояниями

@@ -121,8 +121,15 @@ onMounted(() => {
       type: 'bot',
       mediaType: data.type,
       mediaUrl: data.url,
+      text: data.text,
       mediaDescription: data.description
     })
+    
+    // Обновляем клавиатуру если она есть
+    if (data.keyboard && Array.isArray(data.keyboard)) {
+      currentKeyboard.value = data.keyboard;
+    }
+    
     log(`Получен медиа-контент от бота: ${data.type}`)
   })
 

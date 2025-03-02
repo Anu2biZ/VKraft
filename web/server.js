@@ -22,12 +22,23 @@ class DebugServer {
     }
 
     setupExpress() {
-        // Раздача статических файлов
-        this.app.use(express.static(path.join(__dirname)));
+        // Раздача статических файлов из корневой директории через /static
+        const rootDir = path.resolve(process.cwd());
+        console.log('Serving static files from:', rootDir);
+        this.app.use('/static', express.static(rootDir));
+
+        // Раздача статических файлов из web директории
+        this.app.use(express.static(__dirname));
         
         // Главная страница
         this.app.get('/', (req, res) => {
             res.sendFile(path.join(__dirname, 'index.html'));
+        });
+
+        // Логируем все запросы к статическим файлам
+        this.app.use((req, res, next) => {
+            console.log('Static file request:', req.url);
+            next();
         });
     }
 
@@ -88,6 +99,23 @@ class DebugServer {
                         });
                     };
 
+                    const originalSendImgWithText = bot.sendImgWithText;
+                    bot.sendImgWithText = async (peerId, text, imgUrl, keyboard = null) => {
+                        console.log('Отправка изображения с текстом:', imgUrl);
+                        
+                        // Отправляем сообщение с изображением
+                        const keyboardData = keyboard ? bot.keyboards.get(keyboard) : null;
+                        const formattedKeyboard = keyboardData ? this.formatKeyboard(keyboardData.buttons) : [];
+                        this.io.emit('bot:media', {
+                            type: 'image',
+                            url: imgUrl,
+                            text: text,
+                            description: text,
+                            mediaType: 'image',
+                            keyboard: formattedKeyboard
+                        });
+                    };
+
                     try {
                         // Отправляем сообщение пользователя в интерфейс
                         this.io.emit('bot:message', {
@@ -106,6 +134,7 @@ class DebugServer {
                     // Восстанавливаем оригинальные методы
                     bot.sendText = originalSendText;
                     bot.sendImg = originalSendImg;
+                    bot.sendImgWithText = originalSendImgWithText;
                 } else if (bot.getMode() === 'production') {
                     // В production режиме отправляем реальное сообщение через VK API
                     bot.emit('message', {
@@ -173,6 +202,23 @@ class DebugServer {
                         });
                     };
 
+                    const originalSendImgWithText = bot.sendImgWithText;
+                    bot.sendImgWithText = async (peerId, text, imgUrl, keyboard = null) => {
+                        console.log('Отправка изображения с текстом:', imgUrl);
+                        
+            // Отправляем сообщение с изображением
+            const keyboardData = keyboard ? bot.keyboards.get(keyboard) : null;
+            const formattedKeyboard = keyboardData ? this.formatKeyboard(keyboardData.buttons) : [];
+            this.io.emit('bot:media', {
+                type: 'image',
+                url: imgUrl,
+                text: text,
+                description: text,
+                mediaType: 'image',
+                keyboard: formattedKeyboard
+            });
+                    };
+
                     try {
                         // Отправляем нажатие кнопки в интерфейс
                         this.io.emit('bot:message', {
@@ -191,6 +237,7 @@ class DebugServer {
                     // Восстанавливаем оригинальные методы
                     bot.sendText = originalSendText;
                     bot.sendImg = originalSendImg;
+                    bot.sendImgWithText = originalSendImgWithText;
                 }
                 // В боевом режиме ничего не делаем
             });
@@ -253,6 +300,23 @@ class DebugServer {
             this.io.emit('bot:media', { 
                 type: 'image',
                 url: imgUrl
+            });
+        };
+
+        const originalSendImgWithText = bot.sendImgWithText;
+        bot.sendImgWithText = async (peerId, text, imgUrl, keyboard = null) => {
+            await originalSendImgWithText.call(bot, peerId, text, imgUrl, keyboard);
+            
+            // Отправляем сообщение с изображением
+            const keyboardData = keyboard ? bot.keyboards.get(keyboard) : null;
+            const formattedKeyboard = keyboardData ? this.formatKeyboard(keyboardData.buttons) : [];
+            this.io.emit('bot:media', {
+                type: 'image',
+                url: imgUrl,
+                text: text,
+                description: text,
+                mediaType: 'image',
+                keyboard: formattedKeyboard
             });
         };
 

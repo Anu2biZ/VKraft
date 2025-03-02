@@ -10,20 +10,18 @@
     "README.md"
   ],
   "scripts": {
-    "start": "cross-env NODE_ENV=production node lib/index.js",
-    "dev": "cross-env NODE_ENV=development nodemon lib/index.js",
-    "test": "jest",
-    "build": "vite build",
+    "dev:echo": "concurrently \"npm run dev:web\" \"cross-env NODE_ENV=development node examples/echo-bot.js\"",
+    "dev:delivery": "concurrently \"npm run dev:web\" \"cross-env NODE_ENV=development node examples/delivery.js\"",
+    "prod:echo": "cross-env NODE_ENV=production node examples/echo-bot.js",
+    "prod:delivery": "cross-env NODE_ENV=production node examples/delivery.js",
     "dev:web": "vite",
-    "example:echo": "cross-env NODE_ENV=development node examples/echo-bot.js",
-    "example:echo:prod": "cross-env NODE_ENV=production node examples/echo-bot.js",
-    "debug": "cross-env NODE_ENV=development node web/server.js",
-    "dev:all": "concurrently \"npm run dev:web\" \"npm run example:echo\""
+    "build": "vite build"
   },
   "keywords": [
     "vk",
     "bot",
     "vkontakte",
+    
     "api",
     "debug",
     "web-interface"

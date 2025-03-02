@@ -36,19 +36,22 @@
 
         <!-- Медиа сообщение -->
         <template v-else>
-          <div class="max-w-[150px] rounded-lg overflow-hidden">
-            <img 
-              v-if="message.mediaType === 'image'"
-              :src="message.mediaUrl"
-              :alt="message.mediaDescription"
-              class="w-full block"
-            >
-            <video
-              v-else-if="message.mediaType === 'video'"
-              :src="message.mediaUrl"
-              controls
-              class="w-full block"
-            />
+          <div>
+            <div v-if="message.text" class="mb-2">{{ message.text }}</div>
+            <div class="max-w-[150px] rounded-lg overflow-hidden">
+              <img 
+                v-if="message.mediaType === 'image' || message.type === 'image'"
+                :src="message.mediaUrl || message.url"
+                :alt="message.mediaDescription || message.description"
+                class="w-full block"
+              >
+              <video
+                v-else-if="message.mediaType === 'video'"
+                :src="message.mediaUrl"
+                controls
+                class="w-full block"
+              />
+            </div>
           </div>
         </template>
       </div>
