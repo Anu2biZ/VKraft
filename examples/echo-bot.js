@@ -154,7 +154,8 @@ bot.registerKeyboard('help', {
 
 // Обработка сообщений
 bot.on('message', async (ctx) => {
-    const text = ctx.message.text.toLowerCase();
+    // Получаем текст из правильного места в объекте контекста
+    const text = (ctx.payload?.message?.text || '').toLowerCase();
     console.log('Получено сообщение:', text);
 
     // Проверяем команды
@@ -180,7 +181,7 @@ bot.on('message', async (ctx) => {
         default:
             // Если не команда, отправляем эхо с текущей клавиатурой
             const currentState = ctx.getState() || 'main';
-            await bot.sendText(ctx.peerId, `Вы написали: ${ctx.message.text}`, currentState);
+            await bot.sendText(ctx.peerId, `Вы написали: ${ctx.payload.message.text}`, currentState);
     }
 });
 
