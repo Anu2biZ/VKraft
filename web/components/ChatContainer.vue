@@ -1,16 +1,16 @@
 <template>
-  <div class="flex-1 bg-white rounded-lg flex flex-col">
+  <div class="h-full bg-white rounded-2xl flex flex-col">
     <!-- Заголовок -->
-    <div class="p-4 border-b border-vk-border flex justify-between items-center">
-      <h2 class="text-xl font-medium">Тестовый режим бота ВКонтакте</h2>
-      <div class="flex items-center gap-2">
+    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+      <h2 class="text-lg font-semibold text-gray-800">Тестовый режим бота ВКонтакте</h2>
+      <div class="flex items-center gap-3">
         <span 
           :class="[
-            'w-2 h-2 rounded-full',
+            'w-3 h-3 rounded-full',
             connectionStatus ? 'bg-green-500' : 'bg-red-500'
           ]"
         />
-        <span class="text-sm text-vk-secondary">
+        <span class="text-sm text-gray-600 font-medium">
           {{ connectionStatus ? 'Онлайн' : 'Офлайн' }}
         </span>
       </div>
@@ -19,7 +19,7 @@
     <!-- Сообщения -->
     <div 
       ref="messagesContainer"
-      class="flex-1 p-4 overflow-y-auto flex flex-col gap-2.5"
+      class="flex-1 px-6 py-4 overflow-y-auto flex flex-col gap-4"
     >
       <div
         v-for="(message, index) in messages"
@@ -36,7 +36,7 @@
 
         <!-- Медиа сообщение -->
         <template v-else>
-          <div class="max-w-[300px] rounded-lg overflow-hidden">
+          <div class="max-w-[150px] rounded-lg overflow-hidden">
             <img 
               v-if="message.mediaType === 'image'"
               :src="message.mediaUrl"
@@ -55,35 +55,43 @@
     </div>
 
     <!-- Клавиатура -->
-    <div v-if="keyboard.length" class="p-4 flex flex-wrap gap-2.5">
-      <button
-        v-for="button in keyboard"
-        :key="button.text"
-        @click="$emit('button-click', button)"
-        class="px-4 py-2 rounded text-sm"
-        :class="{
-          'bg-vk-light-blue text-white': button.color === 'primary',
-          'bg-vk-bg text-vk-text': button.color === 'secondary',
-          'bg-green-500 text-white': button.color === 'positive',
-          'bg-red-500 text-white': button.color === 'negative'
-        }"
+    <div v-if="keyboard && keyboard.length" class="px-6 py-4 border-t border-gray-100">
+      <div 
+        v-for="(row, rowIndex) in keyboardRows" 
+        :key="rowIndex"
+        class="flex gap-2 mb-2 last:mb-0"
       >
-        {{ button.text }}
-      </button>
+        <button
+          v-for="button in row"
+          :key="button.text"
+          @click="$emit('button-click', button)"
+          :class="[
+            'flex-1 px-4 py-3 rounded-xl text-base font-medium transition-colors shadow-sm',
+            {
+              'bg-vk-light-blue text-white hover:bg-vk-blue': button.color === 'primary',
+              'bg-gray-100 text-gray-700 hover:bg-gray-200': button.color === 'secondary',
+              'bg-green-500 text-white hover:bg-green-600': button.color === 'positive',
+              'bg-red-500 text-white hover:bg-red-600': button.color === 'negative'
+            }
+          ]"
+        >
+          {{ button.text }}
+        </button>
+      </div>
     </div>
 
     <!-- Поле ввода -->
-    <div class="p-4 border-t border-vk-border flex gap-2.5">
+    <div class="px-6 py-4 border-t border-gray-100 flex gap-3">
       <input
         v-model="messageText"
         @keyup.enter="sendMessage"
         type="text"
         placeholder="Введите сообщение..."
-        class="flex-1 px-3 py-2 border border-vk-border rounded focus:outline-none focus:border-vk-light-blue"
+        class="flex-1 px-4 py-3 text-base border border-gray-200 rounded-xl focus:outline-none focus:border-vk-light-blue focus:ring-2 focus:ring-vk-light-blue focus:ring-opacity-20"
       >
       <button
         @click="sendMessage"
-        class="px-4 py-2 bg-vk-light-blue text-white rounded hover:bg-vk-blue"
+        class="px-6 py-3 bg-vk-light-blue text-white text-base font-medium rounded-xl hover:bg-vk-blue transition-colors shadow-sm"
       >
         Отправить
       </button>
@@ -92,7 +100,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, computed } from 'vue'
 
 const props = defineProps({
   messages: {
@@ -107,6 +115,24 @@ const props = defineProps({
     type: Boolean,
     default: false
   }
+})
+
+// Группируем кнопки по строкам
+const keyboardRows = computed(() => {
+  if (!props.keyboard || !props.keyboard.length) return [];
+  
+  const rows = {};
+  props.keyboard.forEach(btn => {
+    const rowIndex = btn.row || 0;
+    if (!rows[rowIndex]) {
+      rows[rowIndex] = [];
+    }
+    rows[rowIndex].push(btn);
+  });
+
+  return Object.keys(rows)
+    .sort((a, b) => Number(a) - Number(b))
+    .map(rowIndex => rows[rowIndex]);
 })
 
 const emit = defineEmits(['send-message', 'button-click'])

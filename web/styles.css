@@ -10,34 +10,34 @@
 
 @layer components {
   .message {
-    @apply max-w-[60%] p-2 px-3 rounded-xl relative;
+    @apply max-w-[70%] p-4 rounded-2xl relative text-base shadow-sm;
   }
 
   .message.user {
-    @apply bg-vk-light-blue text-white self-end rounded-br-sm;
+    @apply bg-vk-light-blue text-white self-end rounded-br-md;
   }
 
   .message.bot {
-    @apply bg-vk-bg self-start rounded-bl-sm;
+    @apply bg-gray-50 text-gray-800 self-start rounded-bl-md;
   }
 
   .keyboard button {
-    @apply px-4 py-2 rounded cursor-pointer text-sm;
+    @apply px-5 py-2.5 rounded-xl cursor-pointer text-base font-medium transition-all duration-200 shadow-sm;
   }
 
   .keyboard button.primary {
-    @apply bg-vk-light-blue text-white;
+    @apply bg-vk-light-blue text-white hover:bg-vk-blue;
   }
 
   .keyboard button.secondary {
-    @apply bg-vk-bg text-vk-text;
+    @apply bg-gray-50 text-gray-700 hover:bg-gray-100;
   }
 
   .keyboard button.negative {
-    @apply bg-red-500 text-white;
+    @apply bg-red-500 text-white hover:bg-red-600;
   }
 
   .keyboard button.positive {
-    @apply bg-green-500 text-white;
+    @apply bg-green-500 text-white hover:bg-green-600;
   }
 }

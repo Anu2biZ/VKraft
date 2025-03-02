@@ -1,18 +1,18 @@
 <template>
-  <div class="flex h-screen p-5 gap-5">
-    <!-- Сайдбар с консолью и БД -->
-    <div class="w-[300px] bg-white rounded-lg p-4 flex flex-col">
+  <div class="flex h-screen p-8 gap-8 overflow-hidden bg-gray-100">
+    <!-- Основная панель с консолью и БД -->
+    <div class="w-1/2 bg-white rounded-2xl shadow-lg p-6 flex flex-col">
       <!-- Табы -->
-      <div class="flex gap-2.5 mb-4">
+      <div class="flex gap-4 mb-6">
         <button 
           v-for="tab in tabs" 
           :key="tab.id"
           @click="activeTab = tab.id"
           :class="[
-            'flex-1 p-2 rounded border',
+            'flex-1 py-3 px-4 rounded-xl text-base font-medium transition-all duration-200',
             activeTab === tab.id 
-              ? 'bg-vk-light-blue text-white border-vk-light-blue' 
-              : 'bg-white text-vk-secondary border-vk-border'
+              ? 'bg-vk-light-blue text-white shadow-md' 
+              : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
           ]"
         >
           {{ tab.name }}
@@ -20,18 +20,24 @@
       </div>
 
       <!-- Панели -->
-      <ConsolePanel v-show="activeTab === 'console'" :messages="consoleMessages" />
+      <ConsolePanel 
+        v-show="activeTab === 'console'" 
+        :messages="consoleMessages"
+        @clear="consoleMessages = []" 
+      />
       <DatabasePanel v-show="activeTab === 'db'" />
     </div>
 
     <!-- Чат -->
-    <ChatContainer 
-      :messages="chatMessages"
-      :keyboard="currentKeyboard"
-      :connection-status="isConnected"
-      @send-message="sendMessage"
-      @button-click="handleButtonClick"
-    />
+    <div class="w-1/2 bg-white rounded-2xl shadow-lg flex flex-col">
+      <ChatContainer 
+        :messages="chatMessages"
+        :keyboard="currentKeyboard"
+        :connection-status="isConnected"
+        @send-message="sendMessage"
+        @button-click="handleButtonClick"
+      />
+    </div>
   </div>
 </template>
 
@@ -46,6 +52,7 @@ import ChatContainer from './components/ChatContainer.vue'
 const socket = ref(null)
 const isConnected = ref(false)
 const activeTab = ref('console')
+const isCollapsed = ref(false)
 const consoleMessages = ref([])
 const chatMessages = ref([])
 const currentKeyboard = ref([])
@@ -101,10 +108,9 @@ onMounted(() => {
     
     // Обновляем клавиатуру если она есть
     if (message.keyboard && Array.isArray(message.keyboard)) {
-      currentKeyboard.value = message.keyboard.map(btn => ({
-        text: btn.text,
-        color: btn.color || 'primary' // Используем primary как цвет по умолчанию
-      }))
+      currentKeyboard.value = message.keyboard;
+    } else {
+      currentKeyboard.value = [];
     }
     
     log(`${message.isUser ? 'Отправлено' : 'Получено'} сообщение: ${message.text}`)

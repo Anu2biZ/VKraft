@@ -72,10 +72,7 @@ class DebugServer {
                     bot.sendText = async (peerId, text, keyboardName = 'main') => {
                         console.log('Отправка текста:', text);
                         const keyboardData = bot.keyboards.get(keyboardName);
-                        const keyboard = keyboardData ? keyboardData.buttons.map(btn => ({
-                            text: btn.text,
-                            color: btn.color
-                        })) : [];
+                        const keyboard = keyboardData ? this.formatKeyboard(keyboardData.buttons) : [];
                         this.io.emit('bot:message', { 
                             text,
                             keyboard
@@ -160,10 +157,7 @@ class DebugServer {
                     bot.sendText = async (peerId, text, keyboardName = 'main') => {
                         console.log('Отправка текста:', text);
                         const keyboardData = bot.keyboards.get(keyboardName);
-                        const keyboard = keyboardData ? keyboardData.buttons.map(btn => ({
-                            text: btn.text,
-                            color: btn.color
-                        })) : [];
+            const keyboard = keyboardData ? this.formatKeyboard(keyboardData.buttons) : [];
                         this.io.emit('bot:message', { 
                             text,
                             keyboard
@@ -246,10 +240,7 @@ class DebugServer {
         bot.sendText = async (peerId, text, keyboardName = 'main') => {
             await originalSendText.call(bot, peerId, text, keyboardName);
             const keyboardData = bot.keyboards.get(keyboardName);
-            const keyboard = keyboardData ? keyboardData.buttons.map(btn => ({
-                text: btn.text,
-                color: btn.color
-            })) : [];
+            const keyboard = keyboardData ? this.formatKeyboard(keyboardData.buttons) : [];
             this.io.emit('bot:message', { 
                 text,
                 keyboard
@@ -278,6 +269,29 @@ class DebugServer {
         bot.logger.on('logging', (info) => {
             this.io.emit('bot:log', info.message);
         });
+    }
+
+    formatKeyboard(buttons) {
+        // Группируем кнопки по строкам
+        const rows = {};
+        buttons.forEach(btn => {
+            const rowIndex = btn.row || 0;
+            if (!rows[rowIndex]) {
+                rows[rowIndex] = [];
+            }
+            rows[rowIndex].push({
+                text: btn.text,
+                color: btn.color,
+                row: rowIndex
+            });
+        });
+
+        // Возвращаем плоский массив с информацией о строках
+        return buttons.map(btn => ({
+            text: btn.text,
+            color: btn.color,
+            row: btn.row || 0
+        }));
     }
 
     handleTestMessage(socket, text) {

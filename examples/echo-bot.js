@@ -126,7 +126,7 @@ bot.registerKeyboard('main', {
         {
             text: COMMANDS.IMAGE,
             color: 'positive',
-            row: 1
+            row: 0
         },
         {
             text: COMMANDS.DB_TEST,
