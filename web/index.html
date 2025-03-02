@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VK Bot Debug Interface</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="mode-switch">
+                <button id="testMode" class="active">Тестовый режим</button>
+                <button id="prodMode">Боевой режим</button>
+            </div>
+            <div class="console">
+                <h3>Консоль</h3>
+                <div id="consoleOutput"></div>
+            </div>
+        </div>
+        
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2>Отладка бота ВКонтакте</h2>
+                <div class="connection-status">
+                    <span id="statusIndicator" class="status-offline"></span>
+                    <span id="statusText">Офлайн</span>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages"></div>
+            
+            <div class="keyboard" id="keyboard"></div>
+            
+            <div class="chat-input">
+                <input type="text" id="messageInput" placeholder="Введите сообщение...">
+                <button id="sendButton">Отправить</button>
+            </div>
+        </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
