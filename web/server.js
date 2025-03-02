@@ -3,9 +3,15 @@ const http = require('http');
 const path = require('path');
 const { Server } = require('socket.io');
 const { bot } = require('../lib/index.js');
+const config = require('../lib/config');
 
 class DebugServer {
     constructor() {
+        // Проверяем, включен ли веб-интерфейс
+        if (!config.webInterface.enabled && config.mode === 'production') {
+            throw new Error('Веб-интерфейс отключен в production режиме');
+        }
+
         this.app = express();
         this.server = http.createServer(this.app);
         this.io = new Server(this.server);
@@ -31,10 +37,11 @@ class DebugServer {
 
             // Обработка сообщений от пользователя
             socket.on('user:message', (data) => {
-                if (data.mode === 'test') {
-                    console.log('Получено сообщение в тестовом режиме:', data.text);
+                console.log(`Получено сообщение в режиме ${bot.getMode()}:`, data.text);
+                
+                if (bot.getMode() === 'development') {
                     
-                    // Создаем контекст для тестового режима
+                    // Создаем контекст для режима разработки
                     const testContext = {
                         text: data.text,
                         peerId: 1,
@@ -60,7 +67,7 @@ class DebugServer {
                         message: { text: data.text }
                     };
 
-                    // Перехватываем отправку сообщений для тестового режима
+                    // Перехватываем отправку сообщений для режима разработки
                     const originalSendText = bot.sendText;
                     bot.sendText = async (peerId, text, keyboardName = 'main') => {
                         console.log('Отправка текста:', text);
@@ -102,8 +109,8 @@ class DebugServer {
                     // Восстанавливаем оригинальные методы
                     bot.sendText = originalSendText;
                     bot.sendImg = originalSendImg;
-                } else {
-                    // В боевом режиме отправляем реальное сообщение через VK API
+                } else if (bot.getMode() === 'production') {
+                    // В production режиме отправляем реальное сообщение через VK API
                     bot.emit('message', {
                         text: data.text,
                         peerId: 1,
@@ -196,7 +203,39 @@ class DebugServer {
 
             // Изменение режима отладки
             socket.on('debug:mode_change', (data) => {
-                console.log(`Режим отладки изменен на: ${data.mode}`);
+                try {
+                    bot.setMode(data.mode);
+                    console.log(`Режим работы изменен на: ${data.mode}`);
+                    socket.emit('debug:mode_changed', { mode: data.mode });
+                } catch (error) {
+                    console.error('Ошибка при смене режима:', error);
+                    socket.emit('debug:error', error.message);
+                }
+            });
+
+            // Получение списка коллекций
+            socket.on('db:get_collections', async () => {
+                try {
+                    const collections = await bot.getCollections();
+                    socket.emit('db:collections', collections);
+                } catch (error) {
+                    console.error('Ошибка получения коллекций:', error);
+                    socket.emit('db:error', 'Ошибка получения списка коллекций');
+                }
+            });
+
+            // Получение содержимого коллекции
+            socket.on('db:get_documents', async (collectionName) => {
+                try {
+                    const documents = await bot.getAllDocuments(collectionName);
+                    socket.emit('db:documents', {
+                        collection: collectionName,
+                        documents: documents
+                    });
+                } catch (error) {
+                    console.error('Ошибка получения документов:', error);
+                    socket.emit('db:error', `Ошибка получения документов из коллекции ${collectionName}`);
+                }
             });
         });
     }
@@ -264,7 +303,7 @@ class DebugServer {
         }, 300);
     }
 
-    start(port = 3000) {
+    start(port = config.webInterface.port) {
         return new Promise((resolve) => {
             this.server.listen(port, () => {
                 console.log(`Сервер отладки запущен на порту ${port}`);

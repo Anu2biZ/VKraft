@@ -1,8 +1,17 @@
 const { bot } = require('../lib/index.js');
 const DebugServer = require('../web/server.js');
+const config = require('../lib/config');
 
-// Инициализация бота с токеном
-bot.init('vk1.a.2RWsE45TWYRF3EINhXJeB_VCtJ8FmLCkOJIT_zMr0zKF3xVUSxV-XTcvsW1nXy_lrEEGp_WeIEqAjDVFcO_iw9C07T9CjsF8Dj5uMZ6tWwslIO1WCWERjFo25usq3Ljo1a_mKRXVevE0LdevUxWC2gv_WQeS5ZdjZRp4_bN2hCgIzDD5R7LpSKfCnge_dnDtvGcjwrJP_FE-0mOAq2y5MQ');
+// Проверяем режим работы и настройки
+if (process.env.NODE_ENV === 'production') {
+    if (!process.env.VK_TOKEN) {
+        console.error('ОШИБКА: Для работы в production режиме необходимо указать токен VK в файле .env');
+        console.error('Пример настройки:');
+        console.error('1. Скопируйте файл .env.example в .env');
+        console.error('2. Укажите ваш токен VK в переменной VK_TOKEN');
+        process.exit(1);
+    }
+}
 
 // Определяем команды
 const COMMANDS = {
@@ -10,8 +19,12 @@ const COMMANDS = {
     HELP: 'помощь',
     IMAGE: 'картинка',
     BACK: 'назад',
-    CONTACT: 'связаться с человеком'
+    CONTACT: 'связаться с человеком',
+    DB_TEST: 'тест бд'
 };
+
+// Инициализация бота
+bot.init();
 
 // Обработчики команд
 const handleHello = async (ctx) => {
@@ -27,7 +40,8 @@ const handleHelp = async (ctx) => {
         'Доступные команды:\n' +
         `- ${COMMANDS.HELLO}: начать диалог\n` +
         `- ${COMMANDS.HELP}: показать это сообщение\n` +
-        `- ${COMMANDS.IMAGE}: получить случайную картинку`,
+        `- ${COMMANDS.IMAGE}: получить случайную картинку\n` +
+        `- ${COMMANDS.DB_TEST}: тест работы с базой данных`,
         'help'
     );
     ctx.setState('help');
@@ -52,8 +66,39 @@ const handleContact = async (ctx) => {
     await bot.sendText(
         ctx.peerId,
         'Наш оператор свяжется с вами в ближайшее время.',
-        'main'
+        'help'
     );
+};
+
+const handleDbTest = async (ctx) => {
+    console.log('Выполняется команда тест БД');
+    try {
+        // Добавляем тестовую запись в коллекцию
+        const testData = {
+            userId: ctx.peerId,
+            message: ctx.text,
+            timestamp: new Date(),
+            type: 'test'
+        };
+
+        await bot.addDocument('test_messages', testData);
+        
+        // Получаем все записи из коллекции
+        const allMessages = await bot.getAllDocuments('test_messages');
+        
+        await bot.sendText(
+            ctx.peerId,
+            `Запись добавлена в БД!\nВсего записей: ${allMessages.length}`,
+            'main'
+        );
+    } catch (error) {
+        console.error('Ошибка при тестировании БД:', error);
+        await bot.sendText(
+            ctx.peerId,
+            'Произошла ошибка при работе с базой данных',
+            'main'
+        );
+    }
 };
 
 // Регистрация команд
@@ -63,6 +108,7 @@ bot.command(COMMANDS.HELP, handleHelp);
 bot.command(COMMANDS.IMAGE, handleImage);
 bot.command(COMMANDS.BACK, handleBack);
 bot.command(COMMANDS.CONTACT, handleContact);
+bot.command(COMMANDS.DB_TEST, handleDbTest);
 
 // Регистрация клавиатур
 bot.registerKeyboard('main', {
@@ -80,6 +126,11 @@ bot.registerKeyboard('main', {
         {
             text: COMMANDS.IMAGE,
             color: 'positive',
+            row: 1
+        },
+        {
+            text: COMMANDS.DB_TEST,
+            color: 'primary',
             row: 1
         }
     ]
@@ -123,6 +174,9 @@ bot.on('message', async (ctx) => {
         case COMMANDS.CONTACT:
             await handleContact(ctx);
             break;
+        case COMMANDS.DB_TEST:
+            await handleDbTest(ctx);
+            break;
         default:
             // Если не команда, отправляем эхо с текущей клавиатурой
             const currentState = ctx.getState() || 'main';
@@ -135,11 +189,13 @@ bot.on('start', () => {
     console.log('Бот запущен и готов к работе! Используйте команду "помощь" для просмотра доступных команд.');
 });
 
-// Запуск отладочного веб-интерфейса
-const debugServer = new DebugServer();
-debugServer.start(3001).then(() => {
-    console.log('Отладочный веб-интерфейс доступен на http://localhost:3001');
-});
+// Запуск отладочного веб-интерфейса если он включен
+if (config.webInterface.enabled) {
+    const debugServer = new DebugServer();
+    debugServer.start().then(() => {
+        console.log(`Отладочный веб-интерфейс доступен на http://localhost:${config.webInterface.port}`);
+    });
+}
 
 // Запуск бота
 console.log('Запуск бота...');

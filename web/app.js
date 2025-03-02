@@ -35,6 +35,21 @@ class VKBotDebugger {
         this.socket.on('bot:log', (logMessage) => {
             this.log(logMessage);
         });
+
+        // Обработчики событий базы данных
+        this.socket.on('db:collections', (collections) => {
+            this.updateCollectionsList(collections);
+            this.log('Получен список коллекций');
+        });
+
+        this.socket.on('db:documents', (data) => {
+            this.displayDocuments(data);
+            this.log(`Получены документы из коллекции ${data.collection}`);
+        });
+
+        this.socket.on('db:error', (error) => {
+            this.log(`Ошибка базы данных: ${error}`);
+        });
     }
 
     setupUIHandlers() {
@@ -49,13 +64,78 @@ class VKBotDebugger {
             }
         });
 
+        // Обработчики вкладок
+        document.getElementById('consoleTab').addEventListener('click', () => {
+            this.switchTab('console');
+        });
+
+        document.getElementById('dbTab').addEventListener('click', () => {
+            this.switchTab('db');
+        });
+
+        // Обработчики базы данных
+        document.getElementById('refreshDb').addEventListener('click', () => {
+            this.refreshCollections();
+        });
+
+        document.getElementById('collectionSelect').addEventListener('change', (e) => {
+            if (e.target.value) {
+                this.loadCollection(e.target.value);
+            }
+        });
+
         // Устанавливаем тестовый режим по умолчанию
         this.mode = 'test';
+
+        // Загружаем коллекции при старте
+        this.refreshCollections();
     }
 
     initializeUI() {
         this.updateConnectionStatus(false);
         this.log('Интерфейс отладки инициализирован');
+    }
+
+    // Переключение вкладок
+    switchTab(tabName) {
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelectorAll('.panel').forEach(panel => {
+            panel.classList.remove('active');
+        });
+
+        document.getElementById(`${tabName}Tab`).classList.add('active');
+        document.getElementById(`${tabName}Panel`).classList.add('active');
+    }
+
+    // Обновление списка коллекций
+    refreshCollections() {
+        this.socket.emit('db:get_collections');
+    }
+
+    // Обновление выпадающего списка коллекций
+    updateCollectionsList(collections) {
+        const select = document.getElementById('collectionSelect');
+        select.innerHTML = '<option value="">Выберите коллекцию</option>';
+        
+        collections.forEach(collection => {
+            const option = document.createElement('option');
+            option.value = collection;
+            option.textContent = collection;
+            select.appendChild(option);
+        });
+    }
+
+    // Загрузка документов коллекции
+    loadCollection(collectionName) {
+        this.socket.emit('db:get_documents', collectionName);
+    }
+
+    // Отображение документов
+    displayDocuments(data) {
+        const dbContent = document.getElementById('dbContent');
+        dbContent.innerHTML = JSON.stringify(data.documents, null, 2);
     }
 
     sendMessage() {
@@ -127,7 +207,6 @@ class VKBotDebugger {
         indicator.className = isConnected ? 'status-online' : 'status-offline';
         statusText.textContent = isConnected ? 'Онлайн' : 'Офлайн';
     }
-
 
     log(message) {
         const console = document.getElementById('consoleOutput');

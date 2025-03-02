@@ -9,9 +9,23 @@
 <body>
     <div class="container">
         <div class="sidebar">
-            <div class="console">
+            <div class="sidebar-tabs">
+                <button id="consoleTab" class="tab active">Консоль</button>
+                <button id="dbTab" class="tab">База данных</button>
+            </div>
+            <div id="consolePanel" class="panel active">
                 <h3>Консоль</h3>
                 <div id="consoleOutput"></div>
+            </div>
+            <div id="dbPanel" class="panel">
+                <h3>База данных</h3>
+                <div class="db-controls">
+                    <select id="collectionSelect">
+                        <option value="">Выберите коллекцию</option>
+                    </select>
+                    <button id="refreshDb">Обновить</button>
+                </div>
+                <div id="dbContent"></div>
             </div>
         </div>
         
