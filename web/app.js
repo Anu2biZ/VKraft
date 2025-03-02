@@ -19,11 +19,12 @@ class VKBotDebugger {
         });
 
         this.socket.on('bot:message', (message) => {
-            this.addMessage('bot', message.text);
+            const type = message.isUser ? 'user' : 'bot';
+            this.addMessage(type, message.text);
             if (message.keyboard) {
                 this.updateKeyboard(message.keyboard);
             }
-            this.log(`Получено сообщение от бота: ${message.text}`);
+            this.log(`${message.isUser ? 'Отправлено' : 'Получено'} сообщение: ${message.text}`);
         });
 
         this.socket.on('bot:media', (data) => {
@@ -48,14 +49,8 @@ class VKBotDebugger {
             }
         });
 
-        // Обработчики переключения режима
-        document.getElementById('testMode').addEventListener('click', () => {
-            this.switchMode('test');
-        });
-
-        document.getElementById('prodMode').addEventListener('click', () => {
-            this.switchMode('prod');
-        });
+        // Устанавливаем тестовый режим по умолчанию
+        this.mode = 'test';
     }
 
     initializeUI() {
@@ -68,12 +63,10 @@ class VKBotDebugger {
         const text = input.value.trim();
         
         if (text) {
-            this.addMessage('user', text);
             this.socket.emit('user:message', {
                 text,
                 mode: this.mode
             });
-            this.log(`Отправлено сообщение: ${text}`);
             input.value = '';
         }
     }
@@ -135,13 +128,6 @@ class VKBotDebugger {
         statusText.textContent = isConnected ? 'Онлайн' : 'Офлайн';
     }
 
-    switchMode(mode) {
-        this.mode = mode;
-        document.getElementById('testMode').classList.toggle('active', mode === 'test');
-        document.getElementById('prodMode').classList.toggle('active', mode === 'prod');
-        this.log(`Режим переключен на: ${mode}`);
-        this.socket.emit('debug:mode_change', { mode });
-    }
 
     log(message) {
         const console = document.getElementById('consoleOutput');

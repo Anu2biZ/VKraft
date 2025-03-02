@@ -33,28 +33,6 @@ body {
     padding: 15px;
     display: flex;
     flex-direction: column;
-    gap: 15px;
-}
-
-.mode-switch {
-    display: flex;
-    gap: 10px;
-}
-
-.mode-switch button {
-    flex: 1;
-    padding: 8px;
-    border: 1px solid var(--vk-border);
-    border-radius: 4px;
-    background: white;
-    cursor: pointer;
-    color: var(--vk-secondary);
-}
-
-.mode-switch button.active {
-    background: var(--vk-light-blue);
-    color: white;
-    border-color: var(--vk-light-blue);
 }
 
 .console {
@@ -63,6 +41,7 @@ body {
     border-radius: 4px;
     padding: 10px;
     color: #FFFFFF;
+    height: 100%;
 }
 
 .console h3 {

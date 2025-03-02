@@ -8,13 +8,16 @@ bot.init('vk1.a.2RWsE45TWYRF3EINhXJeB_VCtJ8FmLCkOJIT_zMr0zKF3xVUSxV-XTcvsW1nXy_l
 const COMMANDS = {
     HELLO: 'привет',
     HELP: 'помощь',
-    IMAGE: 'картинка'
+    IMAGE: 'картинка',
+    BACK: 'назад',
+    CONTACT: 'связаться с человеком'
 };
 
 // Обработчики команд
 const handleHello = async (ctx) => {
     console.log('Выполняется команда привет');
-    await bot.sendText(ctx.peerId, 'Привет! Я эхо-бот. Напиши мне что-нибудь!');
+    await bot.sendText(ctx.peerId, 'Привет! Я эхо-бот. Напиши мне что-нибудь!', 'main');
+    ctx.setState('main');
 };
 
 const handleHelp = async (ctx) => {
@@ -24,15 +27,32 @@ const handleHelp = async (ctx) => {
         'Доступные команды:\n' +
         `- ${COMMANDS.HELLO}: начать диалог\n` +
         `- ${COMMANDS.HELP}: показать это сообщение\n` +
-        `- ${COMMANDS.IMAGE}: получить случайную картинку`
+        `- ${COMMANDS.IMAGE}: получить случайную картинку`,
+        'help'
     );
+    ctx.setState('help');
 };
 
 const handleImage = async (ctx) => {
     console.log('Выполняется команда картинка');
     await bot.sendImg(
         ctx.peerId,
-        'https://picsum.photos/400/300'
+        'https://picsum.photos/400/300',
+        'main'
+    );
+};
+
+const handleBack = async (ctx) => {
+    console.log('Выполняется команда назад');
+    await handleHello(ctx);
+};
+
+const handleContact = async (ctx) => {
+    console.log('Выполняется команда связаться с человеком');
+    await bot.sendText(
+        ctx.peerId,
+        'Наш оператор свяжется с вами в ближайшее время.',
+        'main'
     );
 };
 
@@ -41,22 +61,45 @@ console.log('Регистрация команд...');
 bot.command(COMMANDS.HELLO, handleHello);
 bot.command(COMMANDS.HELP, handleHelp);
 bot.command(COMMANDS.IMAGE, handleImage);
+bot.command(COMMANDS.BACK, handleBack);
+bot.command(COMMANDS.CONTACT, handleContact);
 
-// Настройка клавиатуры
-bot.setKeyboards([
-    {
-        text: COMMANDS.HELLO,
-        color: 'primary'
-    },
-    {
-        text: COMMANDS.HELP,
-        color: 'secondary'
-    },
-    {
-        text: COMMANDS.IMAGE,
-        color: 'positive'
-    }
-]);
+// Регистрация клавиатур
+bot.registerKeyboard('main', {
+    buttons: [
+        {
+            text: COMMANDS.HELLO,
+            color: 'primary',
+            row: 0
+        },
+        {
+            text: COMMANDS.HELP,
+            color: 'secondary',
+            row: 0
+        },
+        {
+            text: COMMANDS.IMAGE,
+            color: 'positive',
+            row: 1
+        }
+    ]
+});
+
+bot.registerKeyboard('help', {
+    buttons: [
+        {
+            text: COMMANDS.BACK,
+            color: 'negative',
+            row: 0,
+            payload: { command: COMMANDS.HELLO }
+        },
+        {
+            text: COMMANDS.CONTACT,
+            color: 'primary',
+            row: 1
+        }
+    ]
+});
 
 // Обработка сообщений
 bot.on('message', async (ctx) => {
@@ -74,9 +117,16 @@ bot.on('message', async (ctx) => {
         case COMMANDS.IMAGE:
             await handleImage(ctx);
             break;
+        case COMMANDS.BACK:
+            await handleBack(ctx);
+            break;
+        case COMMANDS.CONTACT:
+            await handleContact(ctx);
+            break;
         default:
-            // Если не команда, отправляем эхо
-            await bot.sendText(ctx.peerId, `Вы написали: ${ctx.message.text}`);
+            // Если не команда, отправляем эхо с текущей клавиатурой
+            const currentState = ctx.getState() || 'main';
+            await bot.sendText(ctx.peerId, `Вы написали: ${ctx.message.text}`, currentState);
     }
 });
 

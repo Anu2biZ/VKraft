@@ -62,12 +62,13 @@ class DebugServer {
 
                     // Перехватываем отправку сообщений для тестового режима
                     const originalSendText = bot.sendText;
-                    bot.sendText = async (peerId, text) => {
+                    bot.sendText = async (peerId, text, keyboardName = 'main') => {
                         console.log('Отправка текста:', text);
-                        const keyboard = bot.keyboards.map(btn => ({
+                        const keyboardData = bot.keyboards.get(keyboardName);
+                        const keyboard = keyboardData ? keyboardData.buttons.map(btn => ({
                             text: btn.text,
                             color: btn.color
-                        }));
+                        })) : [];
                         this.io.emit('bot:message', { 
                             text,
                             keyboard
@@ -84,6 +85,12 @@ class DebugServer {
                     };
 
                     try {
+                        // Отправляем сообщение пользователя в интерфейс
+                        this.io.emit('bot:message', {
+                            text: data.text,
+                            isUser: true
+                        });
+
                         // Эмулируем получение сообщения ботом
                         console.log('Эмуляция сообщения...');
                         bot.emit('message', testContext);
@@ -143,12 +150,13 @@ class DebugServer {
 
                     // Перехватываем отправку сообщений для тестового режима
                     const originalSendText = bot.sendText;
-                    bot.sendText = async (peerId, text) => {
+                    bot.sendText = async (peerId, text, keyboardName = 'main') => {
                         console.log('Отправка текста:', text);
-                        const keyboard = bot.keyboards.map(btn => ({
+                        const keyboardData = bot.keyboards.get(keyboardName);
+                        const keyboard = keyboardData ? keyboardData.buttons.map(btn => ({
                             text: btn.text,
                             color: btn.color
-                        }));
+                        })) : [];
                         this.io.emit('bot:message', { 
                             text,
                             keyboard
@@ -165,6 +173,12 @@ class DebugServer {
                     };
 
                     try {
+                        // Отправляем нажатие кнопки в интерфейс
+                        this.io.emit('bot:message', {
+                            text: data.text,
+                            isUser: true
+                        });
+
                         // Эмулируем получение сообщения ботом
                         console.log('Эмуляция нажатия кнопки...');
                         bot.emit('message', testContext);
@@ -190,12 +204,13 @@ class DebugServer {
     setupBotHandlers() {
         // Перехватываем отправку сообщений от бота
         const originalSendText = bot.sendText;
-        bot.sendText = async (peerId, text) => {
-            await originalSendText.call(bot, peerId, text);
-            const keyboard = bot.keyboards.map(btn => ({
+        bot.sendText = async (peerId, text, keyboardName = 'main') => {
+            await originalSendText.call(bot, peerId, text, keyboardName);
+            const keyboardData = bot.keyboards.get(keyboardName);
+            const keyboard = keyboardData ? keyboardData.buttons.map(btn => ({
                 text: btn.text,
                 color: btn.color
-            }));
+            })) : [];
             this.io.emit('bot:message', { 
                 text,
                 keyboard
