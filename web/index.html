@@ -7,48 +7,7 @@
     <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-    <div class="container">
-        <div class="sidebar">
-            <div class="sidebar-tabs">
-                <button id="consoleTab" class="tab active">Консоль</button>
-                <button id="dbTab" class="tab">База данных</button>
-            </div>
-            <div id="consolePanel" class="panel active">
-                <h3>Консоль</h3>
-                <div id="consoleOutput"></div>
-            </div>
-            <div id="dbPanel" class="panel">
-                <h3>База данных</h3>
-                <div class="db-controls">
-                    <select id="collectionSelect">
-                        <option value="">Выберите коллекцию</option>
-                    </select>
-                    <button id="refreshDb">Обновить</button>
-                </div>
-                <div id="dbContent"></div>
-            </div>
-        </div>
-        
-        <div class="chat-container">
-            <div class="chat-header">
-                <h2>Тестовый режим бота ВКонтакте</h2>
-                <div class="connection-status">
-                    <span id="statusIndicator" class="status-offline"></span>
-                    <span id="statusText">Офлайн</span>
-                </div>
-            </div>
-            
-            <div class="chat-messages" id="chatMessages"></div>
-            
-            <div class="keyboard" id="keyboard"></div>
-            
-            <div class="chat-input">
-                <input type="text" id="messageInput" placeholder="Введите сообщение...">
-                <button id="sendButton">Отправить</button>
-            </div>
-        </div>
-    </div>
-    <script src="/socket.io/socket.io.js"></script>
-    <script type="module" src="./app.js"></script>
+    <div id="app"></div>
+    <script type="module" src="./main.js"></script>
 </body>
 </html>

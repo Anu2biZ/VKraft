@@ -1,7 +1,8 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
-
+import vue from '@vitejs/plugin-vue';
 export default defineConfig({
+  plugins: [vue()],
   root: 'web',
   build: {
     outDir: '../dist',
@@ -11,11 +12,11 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/socket.io': {
-        target: 'ws://localhost:3001',
+        target: 'ws://localhost:3005',
         ws: true
       },
       '/api': {
-        target: 'http://localhost:3001',
+        target: 'http://localhost:3005',
         changeOrigin: true
       }
     }
