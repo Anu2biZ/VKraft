@@ -2,7 +2,12 @@
   <div class="h-full bg-white rounded-2xl flex flex-col">
     <!-- Заголовок -->
     <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-      <h2 class="text-lg font-semibold text-gray-800">Тестовый режим бота ВКонтакте</h2>
+      <div class="flex flex-col">
+        <h2 class="text-lg font-semibold text-gray-800">{{ groupName }}</h2>
+        <div v-if="scriptName" class="text-sm text-gray-600">
+          Скрипт: {{ scriptName }}
+        </div>
+      </div>
       <div class="flex items-center gap-3">
         <span 
           :class="[
@@ -44,7 +49,11 @@
                 :src="message.mediaUrl || message.url"
                 :alt="message.mediaDescription || message.description"
                 class="w-full block"
+                @error="handleImageError"
               >
+              <div v-if="message.imageError" class="text-red-500">
+                Ошибка загрузки изображения: {{ message.url }}
+              </div>
               <video
                 v-else-if="message.mediaType === 'video'"
                 :src="message.mediaUrl"
@@ -117,6 +126,14 @@ const props = defineProps({
   connectionStatus: {
     type: Boolean,
     default: false
+  },
+  groupName: {
+    type: String,
+    default: 'Тестовая группа'
+  },
+  scriptName: {
+    type: String,
+    default: null
   }
 })
 
@@ -142,6 +159,16 @@ const emit = defineEmits(['send-message', 'button-click'])
 
 const messageText = ref('')
 const messagesContainer = ref(null)
+
+// Обработчик ошибок загрузки изображений
+const handleImageError = (event) => {
+  const img = event.target
+  const message = props.messages.find(m => m.mediaUrl === img.src || m.url === img.src)
+  if (message) {
+    message.imageError = true
+    console.error('Ошибка загрузки изображения:', img.src)
+  }
+}
 
 // Отправка сообщения
 const sendMessage = () => {

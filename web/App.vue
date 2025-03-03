@@ -1,7 +1,8 @@
 <template>
   <div class="flex h-screen p-8 gap-8 overflow-hidden bg-gray-100">
     <!-- Основная панель с консолью и БД -->
-    <div class="w-1/2 bg-white rounded-2xl shadow-lg p-6 flex flex-col">
+    <div class="w-2/3 bg-white rounded-2xl shadow-lg p-6 flex flex-col">
+      <!-- Заголовок с информацией -->
       <!-- Табы -->
       <div class="flex gap-4 mb-6">
         <button 
@@ -29,11 +30,13 @@
     </div>
 
     <!-- Чат -->
-    <div class="w-1/2 bg-white rounded-2xl shadow-lg flex flex-col">
+    <div class="w-1/3 bg-white rounded-2xl shadow-lg flex flex-col">
       <ChatContainer 
         :messages="chatMessages"
         :keyboard="currentKeyboard"
         :connection-status="isConnected"
+        :group-name="botInfo.groupName"
+        :script-name="botInfo.scriptName"
         @send-message="sendMessage"
         @button-click="handleButtonClick"
       />
@@ -56,6 +59,10 @@ const isCollapsed = ref(false)
 const consoleMessages = ref([])
 const chatMessages = ref([])
 const currentKeyboard = ref([])
+const botInfo = ref({
+  groupName: null,
+  scriptName: null
+})
 
 const tabs = [
   { id: 'console', name: 'Консоль' },
@@ -134,5 +141,15 @@ onMounted(() => {
   })
 
   socket.value.on('bot:log', log)
+
+  socket.value.on('bot:info', (info) => {
+    botInfo.value = info
+    if (info.groupName) {
+      log(`Подключено к группе: ${info.groupName}`)
+    }
+    if (info.scriptName) {
+      log(`Запущен скрипт: ${info.scriptName}`)
+    }
+  })
 })
 </script>

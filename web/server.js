@@ -22,10 +22,10 @@ class DebugServer {
     }
 
     setupExpress() {
-        // Раздача статических файлов из корневой директории через /static
-        const rootDir = path.resolve(process.cwd());
-        console.log('Serving static files from:', rootDir);
-        this.app.use('/static', express.static(rootDir));
+        // Раздача статических файлов из web/public
+        const publicDir = path.join(__dirname, 'public');
+        console.log('Serving static files from:', publicDir);
+        this.app.use(express.static(publicDir));
 
         // Раздача статических файлов из web директории
         this.app.use(express.static(__dirname));
@@ -42,9 +42,37 @@ class DebugServer {
         });
     }
 
+    async getGroupInfo() {
+        // Если есть токен, пробуем получить название группы через API
+        if (config.vk.token && bot.vk) {
+            try {
+                const group = await bot.vk.api.groups.getById({});
+                return group[0].name;
+            } catch (error) {
+                console.error('Ошибка при получении информации о группе:', error);
+            }
+        }
+        
+        // Если не удалось получить название, используем ID или тестовое название
+        return config.vk.groupId ? `Группа #${config.vk.groupId}` : 'Тестовая группа';
+    }
+
+    getScriptName() {
+        const scriptPath = process.argv[1];
+        return scriptPath ? path.basename(scriptPath) : null;
+    }
+
     setupSocketHandlers() {
-        this.io.on('connection', (socket) => {
+        this.io.on('connection', async (socket) => {
             console.log('Новое подключение к отладчику');
+
+            // Отправляем информацию о группе и скрипте
+            const groupName = await this.getGroupInfo();
+            const scriptName = this.getScriptName();
+            socket.emit('bot:info', { 
+                groupName,
+                scriptName
+            });
 
             // Обработка сообщений от пользователя
             socket.on('user:message', (data) => {
@@ -106,14 +134,15 @@ class DebugServer {
                         // Отправляем сообщение с изображением
                         const keyboardData = keyboard ? bot.keyboards.get(keyboard) : null;
                         const formattedKeyboard = keyboardData ? this.formatKeyboard(keyboardData.buttons) : [];
-                        this.io.emit('bot:media', {
-                            type: 'image',
-                            url: imgUrl,
-                            text: text,
-                            description: text,
-                            mediaType: 'image',
-                            keyboard: formattedKeyboard
-                        });
+            this.io.emit('bot:media', {
+                type: 'image',
+                url: imgUrl,
+                mediaUrl: imgUrl,
+                text: text,
+                description: text,
+                mediaType: 'image',
+                keyboard: formattedKeyboard
+            });
                     };
 
                     try {
@@ -212,6 +241,7 @@ class DebugServer {
             this.io.emit('bot:media', {
                 type: 'image',
                 url: imgUrl,
+                mediaUrl: imgUrl,
                 text: text,
                 description: text,
                 mediaType: 'image',
@@ -278,6 +308,28 @@ class DebugServer {
                     socket.emit('db:error', `Ошибка получения документов из коллекции ${collectionName}`);
                 }
             });
+
+            // Очистка коллекции
+            socket.on('db:clear_collection', async (collectionName) => {
+                try {
+                    await bot.clearCollection(collectionName);
+                    socket.emit('db:collection_cleared');
+                } catch (error) {
+                    console.error('Ошибка очистки коллекции:', error);
+                    socket.emit('db:error', `Ошибка очистки коллекции ${collectionName}`);
+                }
+            });
+
+            // Удаление коллекции
+            socket.on('db:delete_collection', async (collectionName) => {
+                try {
+                    await bot.deleteCollection(collectionName);
+                    socket.emit('db:collection_deleted');
+                } catch (error) {
+                    console.error('Ошибка удаления коллекции:', error);
+                    socket.emit('db:error', `Ошибка удаления коллекции ${collectionName}`);
+                }
+            });
         });
     }
 
@@ -313,6 +365,7 @@ class DebugServer {
             this.io.emit('bot:media', {
                 type: 'image',
                 url: imgUrl,
+                mediaUrl: imgUrl,
                 text: text,
                 description: text,
                 mediaType: 'image',
