@@ -20,7 +20,8 @@ const COMMANDS = {
     DELIVERY: 'доставка',
     BACK: 'назад',
     CANCEL: 'отменить заказ',
-    CHECKOUT: 'оформить заказ'
+    CHECKOUT: 'оформить заказ',
+    PAYMENT: 'перейти к оплате'
 };
 
 // Кэш для данных
@@ -44,137 +45,45 @@ const getPizzas = async () => {
     return pizzas;
 };
 
-// Функция инициализации категорий
-const initCategories = async () => {
-    // Сбрасываем кэш при инициализации
-    categoriesCache = null;
-    pizzasCache = null;
-    console.log('Инициализация категорий...');
-
-    // Очищаем старые категории
-    await bot.clearCollection('categories');
-
-    // Добавляем категории
-    const defaultCategories = [
-        {
-            code: 'meat',
-            name: 'Мясные',
-            color: 'primary'
-        },
-        {
-            code: 'vegetarian',
-            name: 'Вегетарианские',
-            color: 'positive'
-        },
-        {
-            code: 'spicy',
-            name: 'Острые',
-            color: 'negative'
-        }
-    ];
-
-    for (const category of defaultCategories) {
-        await bot.addDocument('categories', category);
-    }
-
-    return defaultCategories;
-};
-
-// Функция инициализации базы данных с пиццами
-const initDatabase = async () => {
-    console.log('Инициализация базы данных...');
-
-    // Инициализируем категории
-    const categories = await initCategories();
-    
-    // Очищаем старые пиццы
-    await bot.clearCollection('pizzas');
-    
-    // Добавляем пиццы в базу данных
-    const defaultPizzas = [
-        // Мясные пиццы
-        {
-            name: 'Пепперони',
-            categoryId: 'meat',
-            price: 599,
-            description: 'Классическая пицца с томатным соусом, сыром моцарелла и пикантной пепперони',
-            // В development режиме используем локальные файлы, в production - URL
-            image: 'https://img.freepik.com/free-photo/hawaiian-pizza_74190-2500.jpg'
-        },
-        {
-            name: 'Мясная',
-            categoryId: 'meat',
-            price: 649,
-            description: 'Сытная пицца с томатным соусом, моцареллой, беконом, ветчиной и колбасками',
-            image: 'https://img.freepik.com/free-photo/hawaiian-pizza_74190-2500.jpg'
-        },
-        {
-            name: 'Гавайская',
-            categoryId: 'meat',
-            price: 599,
-            description: 'Экзотическая пицца с томатным соусом, моцареллой, ветчиной и ананасами',
-            image: 'https://img.freepik.com/free-photo/hawaiian-pizza_74190-2500.jpg'
-        },
-        // Вегетарианские пиццы
-        {
-            name: 'Маргарита',
-            categoryId: 'vegetarian',
-            price: 499,
-            description: 'Классическая итальянская пицца с томатным соусом, моцареллой и свежим базиликом',
-            image: 'https://img.freepik.com/free-photo/pizza-margarita-table_140725-5611.jpg'
-        },
-        {
-            name: 'Грибная',
-            categoryId: 'vegetarian',
-            price: 549,
-            description: 'Ароматная пицца с грибами, моцареллой, луком и итальянскими травами',
-            image: 'https://img.freepik.com/free-photo/mushroom-pizza-vegetarian-white-background_123827-20891.jpg'
-        },
-        {
-            name: 'Овощная',
-            categoryId: 'vegetarian',
-            price: 499,
-            description: 'Легкая пицца с томатами, перцем, луком, оливками и свежими травами',
-            image: 'https://img.freepik.com/free-photo/vegetarian-pizza-with-mushrooms-bell-peppers_140725-5297.jpg'
-        },
-        // Острые пиццы
-        {
-            name: 'Дьябло',
-            categoryId: 'spicy',
-            price: 649,
-            description: 'Острая пицца с салями, перцем халапеньо, красным луком и острым соусом',
-            image: 'https://img.freepik.com/free-photo/spicy-pizza-with-chili-peppers_140725-5395.jpg'
-        },
-        {
-            name: 'Мексиканская',
-            categoryId: 'spicy',
-            price: 629,
-            description: 'Острая пицца в мексиканском стиле с фаршем, перцем халапеньо и кукурузой',
-            image: 'https://img.freepik.com/free-photo/mexican-pizza-with-beef-chilli_140725-5298.jpg'
-        },
-        {
-            name: 'Острый Чили',
-            categoryId: 'spicy',
-            price: 599,
-            description: 'Жгучая пицца с острым перцем чили, паприкой и специями',
-            image: 'https://img.freepik.com/free-photo/pizza-with-chili-peppers-wooden-table_140725-5382.jpg'
-        }
-    ];
-
-    for (const pizza of defaultPizzas) {
-        await bot.addDocument('pizzas', pizza);
-    }
-};
-
 // Обработчики команд
 const handleStart = async (ctx) => {
-    console.log('Выполняется команда начать');
-    await bot.sendText(
-        ctx.peerId,
-        'Добро пожаловать в пиццерию! Я помогу вам сделать заказ.',
-        'main'
-    );
-    ctx.setState('main');
+    console.log('=== Выполняется команда начать ===');
+    console.log('ID пользователя:', ctx.peerId);
+    console.log('Текущее состояние:', await ctx.getState());
+    
+    try {
+        // Регистрируем главную клавиатуру заново
+        console.log('Регистрация главной клавиатуры...');
+        bot.registerKeyboard('main', {
+            buttons: [
+                {
+                    text: COMMANDS.DELIVERY,
+                    color: 'primary',
+                    row: 0
+                },
+                {
+                    text: COMMANDS.HELP,
+                    color: 'secondary',
+                    row: 0
+                }
+            ]
+        });
+        console.log('Главная клавиатура зарегистрирована');
+
+        console.log('Отправка приветственного сообщения...');
+        await bot.sendText(
+            ctx.peerId,
+            'Добро пожаловать в пиццерию! Я помогу вам сделать заказ.',
+            'main'
+        );
+        console.log('Приветственное сообщение отправлено');
+        
+        console.log('Установка состояния main...');
+        await ctx.setState('main');
+        console.log('Состояние main установлено');
+    } catch (error) {
+        console.error('Ошибка в handleStart:', error);
+    }
 };
 
 const handleHelp = async (ctx) => {
@@ -191,21 +100,82 @@ const handleHelp = async (ctx) => {
 };
 
 const handleDelivery = async (ctx) => {
-    console.log('Выполняется команда доставка');
-    await bot.sendText(
-        ctx.peerId,
-        'Выберите категорию пиццы:',
-        'categories'
-    );
-    ctx.setState('categories');
+    console.log('=== Выполняется команда доставка ===');
+    console.log('ID пользователя:', ctx.peerId);
+    console.log('Текущее состояние:', await ctx.getState());
+
+    try {
+        // Получаем категории
+        console.log('Получение категорий...');
+        const categories = await getCategories();
+        console.log('Доступные категории:', categories.map(c => c.name));
+
+        // Проверяем есть ли пиццы в корзине
+        console.log('Проверка корзины...');
+        const cartItems = (await bot.getAllDocuments('cart'))
+            .filter(item => item.userId === ctx.peerId);
+        console.log('Найдено товаров в корзине:', cartItems.length);
+
+        // Создаем клавиатуру с категориями
+        console.log('Создание кнопок категорий...');
+        const categoryButtons = categories.map((category, index) => ({
+            text: category.name,
+            color: category.color,
+            row: 0
+        }));
+
+        // Добавляем кнопки навигации
+        console.log('Добавление кнопок навигации...');
+        categoryButtons.push({
+            text: COMMANDS.BACK,
+            color: 'secondary',
+            row: 1
+        });
+
+        // Если в корзине есть пиццы, добавляем кнопку оформления заказа
+        if (cartItems.length > 0) {
+            console.log('Добавление кнопки оформления заказа...');
+            categoryButtons.push({
+                text: COMMANDS.CHECKOUT,
+                color: 'primary',
+                row: 1
+            });
+        }
+
+        // Регистрируем клавиатуру
+        console.log('Регистрация клавиатуры категорий...');
+        console.log('Кнопки:', JSON.stringify(categoryButtons, null, 2));
+        bot.registerKeyboard('categories', {
+            buttons: categoryButtons
+        });
+        console.log('Клавиатура категорий зарегистрирована');
+
+        console.log('Отправка сообщения с клавиатурой...');
+        await bot.sendText(
+            ctx.peerId,
+            'Выберите категорию пиццы:',
+            'categories'
+        );
+        console.log('Сообщение с клавиатурой отправлено');
+
+        console.log('Установка состояния categories...');
+        await ctx.setState('categories');
+        console.log('Состояние categories установлено');
+    } catch (error) {
+        console.error('Ошибка в handleDelivery:', error);
+    }
 };
 
 const handleCategory = async (ctx, categoryName) => {
+    console.log('=== Начало обработки выбора категории ===');
     console.log('Выбрана категория:', categoryName);
     
     // Получаем категорию из БД
     const categories = await getCategories();
+    console.log('Все доступные категории:', categories);
+    
     const category = categories.find(c => c.name === categoryName);
+    console.log('Найденная категория:', category);
     
     if (!category) {
         console.error('Категория не найдена:', categoryName);
@@ -213,62 +183,99 @@ const handleCategory = async (ctx, categoryName) => {
     }
 
     // Получаем пиццы выбранной категории
+    console.log('Запрашиваем все пиццы из БД...');
     const pizzas = await getPizzas();
-    console.log('Категория:', category);
-    console.log('Код категории:', category.code);
-    console.log('Все пиццы:', pizzas);
-    const categoryPizzas = pizzas.filter(p => {
-        console.log('Сравниваем categoryId пиццы:', p.categoryId, 'с кодом категории:', category.code);
-        return p.categoryId === category.code;
-    });
-    console.log('Отфильтрованные пиццы:', categoryPizzas);
     
-    // Сохраняем текущую категорию
-    await bot.addDocument('user_states', {
-        userId: ctx.peerId,
-        categoryId: category.code
+    if (!Array.isArray(pizzas)) {
+        console.error('Ошибка: pizzas не является массивом:', pizzas);
+        return;
+    }
+    
+    console.log('Получены пиццы из БД:', pizzas.length, 'шт.');
+    console.log('Фильтруем пиццы для категории:', category.code);
+    
+    const categoryPizzas = pizzas.filter(p => {
+        const match = p.categoryId === category.code;
+        console.log(`Пицца "${p.name}": categoryId=${p.categoryId}, нужен=${category.code}, совпадение=${match}`);
+        return match;
     });
+    
+    console.log('Найдено пицц в категории:', categoryPizzas.length);
+    console.log('Пиццы в категории:', categoryPizzas.map(p => p.name));
+    
+    // Сохраняем состояние с информацией о категории
+    await ctx.setState(`pizza_selection:${category.code}`);
 
     // Отправляем сообщение с пиццами
     await bot.sendText(ctx.peerId, `Доступные пиццы в категории ${category.name}:`, null);
     
     // Отправляем все изображения параллельно
     console.log('Отправка пицц категории:', categoryPizzas);
-    await Promise.all(categoryPizzas.map(async pizza => {
+    for (const pizza of categoryPizzas) {
         console.log('Отправка пиццы:', pizza.name, pizza.image);
         try {
             await bot.sendImgWithText(
                 ctx.peerId,
                 `🍕 ${pizza.name}\n📝 ${pizza.description}\n💰 Цена: ${pizza.price} руб.`,
-                pizza.image,
-                'pizza_actions'
+                pizza.image
             );
             console.log('Пицца отправлена успешно:', pizza.name);
         } catch (error) {
             console.error('Ошибка при отправке пиццы:', pizza.name, error);
         }
-    }));
-    
-    ctx.setState('pizza_selection');
-};
+    }
 
-const handlePizzaSelection = async (ctx, pizzaName) => {
-    console.log('Выбрана пицца:', pizzaName);
-    // Добавляем пиццу в корзину
-    const pizza = (await getPizzas()).find(p => p.name === pizzaName);
-    if (pizza) {
-        await bot.addDocument('cart', {
-            userId: ctx.peerId,
-            pizza: pizza,
-            timestamp: new Date()
+    // Создаем одну общую клавиатуру для выбора пиццы
+    const pizzaButtons = categoryPizzas.map((pizza, index) => ({
+        text: `🛒 ${pizza.name}`,
+        color: 'positive',
+        row: Math.floor(index / 2), // Размещаем по 2 кнопки в ряд
+        payload: {
+            command: 'add_to_cart',
+            pizzaName: pizza.name
+        }
+    }));
+
+    // Проверяем есть ли пиццы в корзине
+    const cartItems = (await bot.getAllDocuments('cart'))
+        .filter(item => item.userId === ctx.peerId);
+
+    // Добавляем кнопки навигации
+    pizzaButtons.push({
+        text: COMMANDS.BACK,
+        color: 'secondary',
+        row: Math.ceil(pizzaButtons.length / 2) // Помещаем кнопку "Назад" в новый ряд
+    });
+
+    // Если в корзине есть пиццы, добавляем кнопку оформления заказа
+    if (cartItems.length > 0) {
+        pizzaButtons.push({
+            text: COMMANDS.CHECKOUT,
+            color: 'primary',
+            row: Math.ceil(pizzaButtons.length / 2) // В том же ряду что и "Назад"
         });
-        
+    }
+
+    // Регистрируем клавиатуру
+    const keyboardName = `category_${category.code}_selection`;
+    console.log('Регистрация клавиатуры для выбора пиццы:', keyboardName);
+    console.log('Кнопки:', JSON.stringify(pizzaButtons, null, 2));
+    
+    try {
+        bot.registerKeyboard(keyboardName, {
+            buttons: pizzaButtons
+        });
+        console.log('Клавиатура для выбора пиццы зарегистрирована');
+
+        console.log('Отправка сообщения с клавиатурой...');
         await bot.sendText(
             ctx.peerId,
-            `Пицца "${pizzaName}" добавлена в корзину!\nХотите добавить что-то еще или оформить заказ?`,
-            'cart_actions'
+            'Выберите пиццу для добавления в корзину:',
+            keyboardName
         );
-        ctx.setState('cart');
+        console.log('Сообщение с клавиатурой отправлено');
+    } catch (error) {
+        console.error('Ошибка при регистрации клавиатуры или отправке сообщения:', error);
     }
 };
 
@@ -290,20 +297,31 @@ const handleCheckout = async (ctx) => {
     // Считаем общую сумму
     const total = cartItems.reduce((sum, item) => sum + item.pizza.price, 0);
     
+    // Регистрируем клавиатуру для оплаты
+    bot.registerKeyboard('payment', {
+        buttons: [
+            {
+                text: COMMANDS.BACK,
+                color: 'secondary',
+                row: 0
+            },
+            {
+                text: 'Перейти к оплате',
+                color: 'positive',
+                row: 0
+            }
+        ]
+    });
+
     await bot.sendText(
         ctx.peerId,
         'Ваш заказ:\n' +
         cartItems.map(item => `- ${item.pizza.name} (${item.pizza.price} руб.)`).join('\n') +
-        `\n\nИтого: ${total} руб.\n\nСпасибо за заказ! Это демо-бот, поэтому оплата не требуется.`,
-        'main'
+        `\n\nИтого: ${total} руб.`,
+        'payment'
     );
-
-    // Очищаем корзину пользователя
-    for (const item of cartItems) {
-        await bot.deleteDocument('cart', item._id);
-    }
     
-    ctx.setState('main');
+    await ctx.setState('payment');
 };
 
 const handleCancel = async (ctx) => {
@@ -321,100 +339,321 @@ const handleCancel = async (ctx) => {
         'Заказ отменен. Возвращаемся в главное меню.',
         'main'
     );
-    ctx.setState('main');
+    await ctx.setState('main');
+};
+
+// Обработчик добавления в корзину
+const handleAddToCart = async (ctx) => {
+    console.log('=== Начало обработки добавления в корзину ===');
+    console.log('Получен payload:', ctx.message?.payload);
+    console.log('Тип payload:', typeof ctx.message?.payload);
+    
+    const pizzaName = ctx.message?.payload?.pizzaName;
+    if (!pizzaName) {
+        console.error('Название пиццы не найдено в payload');
+        return;
+    }
+
+    console.log('Добавление пиццы в корзину:', pizzaName);
+    console.log('Текущее состояние:', await ctx.getState());
+    const pizzas = await getPizzas();
+    const pizza = pizzas.find(p => p.name === pizzaName);
+
+    if (!pizza) {
+        console.error('Пицца не найдена:', pizzaName);
+        return;
+    }
+
+    // Добавляем в корзину
+    const cartItem = {
+        userId: ctx.peerId,
+        pizza: pizza,
+        timestamp: new Date()
+    };
+    console.log('=== Добавление в корзину ===');
+    console.log('ID пользователя:', ctx.peerId);
+    console.log('Пицца:', pizza);
+    console.log('Добавляем в корзину:', cartItem);
+    
+    try {
+        const result = await bot.addDocument('cart', cartItem);
+        console.log('Результат добавления в корзину:', result);
+        console.log('Пицца успешно добавлена в корзину');
+    } catch (error) {
+        console.error('Ошибка при добавлении в корзину:', error);
+        return;
+    }
+
+    // Получаем текущую категорию из пиццы
+    const currentCategory = (await getCategories())
+        .find(c => c.code === pizza.categoryId);
+    
+    if (!currentCategory) {
+        console.error('Не найдена категория пиццы:', pizza.categoryId);
+        return;
+    }
+
+    console.log('Текущая категория:', currentCategory);
+
+    // Получаем пиццы текущей категории для кнопок
+    const categoryPizzas = (await getPizzas())
+        .filter(p => p.categoryId === currentCategory.code);
+
+    // Создаем кнопки для пицц
+    const pizzaButtons = categoryPizzas.map((p, index) => ({
+        text: `🛒 ${p.name}`,
+        color: 'positive',
+        row: Math.floor(index / 2),
+        payload: {
+            command: 'add_to_cart',
+            pizzaName: p.name
+        }
+    }));
+
+    // Добавляем кнопки навигации
+    pizzaButtons.push(
+        {
+            text: COMMANDS.BACK,
+            color: 'secondary',
+            row: Math.ceil(pizzaButtons.length / 2)
+        },
+        {
+            text: COMMANDS.CHECKOUT,
+            color: 'primary',
+            row: Math.ceil(pizzaButtons.length / 2)
+        }
+    );
+
+    // Регистрируем клавиатуру
+    const keyboardName = `category_${currentCategory.code}_selection`;
+    console.log('Регистрируем клавиатуру:', keyboardName);
+    console.log('Кнопки:', JSON.stringify(pizzaButtons, null, 2));
+    
+    try {
+        bot.registerKeyboard(keyboardName, {
+            buttons: pizzaButtons
+        });
+        console.log('Клавиатура успешно зарегистрирована');
+
+        // Отправляем сообщение о добавлении в корзину
+        console.log('Отправляем сообщение об успешном добавлении в корзину');
+        await bot.sendText(
+            ctx.peerId,
+            `✅ Пицца "${pizza.name}" добавлена в корзину!\nМожете добавить еще пиццы этой категории или оформить заказ.`,
+            keyboardName
+        );
+        console.log('Сообщение успешно отправлено');
+    } catch (error) {
+        console.error('Ошибка при отправке сообщения:', error);
+    }
+    
+    // Сохраняем состояние выбора пицц с информацией о категории
+    await ctx.setState(`pizza_selection:${currentCategory.code}`);
 };
 
 // Функция регистрации команд и клавиатур
 const registerCommandsAndKeyboards = async () => {
-    console.log('Регистрация команд...');
-    bot.command(COMMANDS.START, handleStart);
-    bot.command(COMMANDS.HELP, handleHelp);
-    bot.command(COMMANDS.DELIVERY, handleDelivery);
-    bot.command(COMMANDS.CANCEL, handleCancel);
-    bot.command(COMMANDS.CHECKOUT, handleCheckout);
+    console.log('=== Начало регистрации команд и клавиатур ===');
+    
+    try {
+        console.log('Регистрация основных команд...');
+        bot.command(COMMANDS.START, handleStart);
+        bot.command(COMMANDS.HELP, handleHelp);
+        bot.command(COMMANDS.DELIVERY, handleDelivery);
+        bot.command(COMMANDS.CANCEL, handleCancel);
+        bot.command(COMMANDS.CHECKOUT, handleCheckout);
 
-    // Регистрируем категории как команды
-    console.log('Регистрация категорий как команд...');
-    const categories = await getCategories();
-    categories.forEach(category => {
-        bot.command(category.name.toLowerCase(), (ctx) => handleCategory(ctx, category.name));
-    });
+        // Регистрируем команду оплаты в обоих регистрах
+        const handlePayment = async (ctx) => {
+            if (await ctx.getState() === 'payment') {
+                console.log('Обработка команды "Перейти к оплате"');
+                // Очищаем корзину пользователя
+                const cartItems = (await bot.getAllDocuments('cart'))
+                    .filter(item => item.userId === ctx.peerId);
+                
+                console.log('Очистка корзины пользователя...');
+                for (const item of cartItems) {
+                    await bot.deleteDocument('cart', item._id);
+                }
+                console.log('Корзина очищена');
 
-    // Регистрация клавиатур
-    bot.registerKeyboard('main', {
-        buttons: [
-            {
-                text: COMMANDS.DELIVERY,
-                color: 'primary',
-                row: 0
-            },
-            {
-                text: COMMANDS.HELP,
-                color: 'secondary',
-                row: 0
+                console.log('Отправка сообщения о завершении заказа...');
+                await bot.sendText(
+                    ctx.peerId,
+                    'Спасибо за заказ! Это демо-бот, поэтому оплата не требуется.',
+                    'main'
+                );
+                await ctx.setState('main');
+                console.log('Заказ завершен, установлено состояние main');
             }
-        ]
-    });
+        };
+        
+        // Регистрируем команду в обоих регистрах
+        bot.command('перейти к оплате', handlePayment);
+        bot.command('Перейти к оплате', handlePayment);
+        console.log('Основные команды зарегистрированы');
 
-    // Создаем клавиатуру с категориями
-    const categoryButtons = categories.map((category, index) => ({
-        text: category.name,
-        color: category.color,
-        row: 0
-    }));
+        // Регистрируем категории как команды
+        console.log('Получение категорий из БД...');
+        const categories = await getCategories();
+        console.log('Найдено категорий:', categories.length);
+        
+        console.log('Регистрация команд для категорий...');
+        categories.forEach(category => {
+            console.log(`Регистрация команд для категории: ${category.name}`);
+            // Регистрируем команду для точного названия
+            bot.command(category.name, (ctx) => handleCategory(ctx, category.name));
+            // И для названия в нижнем регистре
+            bot.command(category.name.toLowerCase(), (ctx) => handleCategory(ctx, category.name));
+            console.log(`Зарегистрированы команды: "${category.name}" и "${category.name.toLowerCase()}"`);
+        });
+        console.log('Команды категорий зарегистрированы');
 
-    bot.registerKeyboard('categories', {
-        buttons: [
-            ...categoryButtons,
-            {
-                text: COMMANDS.BACK,
-                color: 'secondary',
-                row: 1
-            }
-        ]
-    });
+        console.log('Регистрация клавиатур...');
+        console.log('Регистрация главной клавиатуры...');
+        bot.registerKeyboard('main', {
+            buttons: [
+                {
+                    text: COMMANDS.DELIVERY,
+                    color: 'primary',
+                    row: 0
+                },
+                {
+                    text: COMMANDS.HELP,
+                    color: 'secondary',
+                    row: 0
+                }
+            ]
+        });
+        console.log('Главная клавиатура зарегистрирована');
 
-    bot.registerKeyboard('pizza_actions', {
-        buttons: [
-            {
-                text: COMMANDS.BACK,
-                color: 'secondary',
-                row: 0
-            },
-            {
-                text: COMMANDS.CANCEL,
-                color: 'negative',
-                row: 0
-            }
-        ]
-    });
+        console.log('Проверка корзины...');
+        const cartItems = (await bot.getAllDocuments('cart'))
+            .filter(item => item.userId === 1); // Используем 1 как peerId в development режиме
+        console.log('Найдено товаров в корзине:', cartItems.length);
 
-    bot.registerKeyboard('cart_actions', {
-        buttons: [
-            {
-                text: COMMANDS.DELIVERY,
-                color: 'primary',
-                row: 0
-            },
-            {
+        console.log('Создание клавиатуры категорий...');
+        const categoryButtons = categories.map((category, index) => ({
+            text: category.name,
+            color: category.color,
+            row: 0
+        }));
+
+        // Добавляем кнопки навигации
+        categoryButtons.push({
+            text: COMMANDS.BACK,
+            color: 'secondary',
+            row: 1
+        });
+
+        // Если в корзине есть пиццы, добавляем кнопку оформления заказа
+        if (cartItems.length > 0) {
+            categoryButtons.push({
                 text: COMMANDS.CHECKOUT,
-                color: 'positive',
-                row: 0
-            },
-            {
-                text: COMMANDS.CANCEL,
-                color: 'negative',
+                color: 'primary',
                 row: 1
-            }
-        ]
-    });
+            });
+        }
+
+        console.log('Регистрация клавиатуры категорий...');
+        console.log('Кнопки:', JSON.stringify(categoryButtons, null, 2));
+        bot.registerKeyboard('categories', {
+            buttons: categoryButtons
+        });
+        console.log('Клавиатура категорий зарегистрирована');
+
+        console.log('Регистрация дополнительных клавиатур...');
+        bot.registerKeyboard('pizza_actions', {
+            buttons: [
+                {
+                    text: COMMANDS.BACK,
+                    color: 'secondary',
+                    row: 0
+                },
+                {
+                    text: COMMANDS.CANCEL,
+                    color: 'negative',
+                    row: 0
+                }
+            ]
+        });
+
+        bot.registerKeyboard('cart_actions', {
+            buttons: [
+                {
+                    text: COMMANDS.DELIVERY,
+                    color: 'primary',
+                    row: 0
+                },
+                {
+                    text: COMMANDS.CHECKOUT,
+                    color: 'positive',
+                    row: 0
+                },
+                {
+                    text: COMMANDS.CANCEL,
+                    color: 'negative',
+                    row: 1
+                }
+            ]
+        });
+        console.log('Дополнительные клавиатуры зарегистрированы');
+        
+        console.log('=== Регистрация команд и клавиатур завершена ===');
+    } catch (error) {
+        console.error('Ошибка при регистрации команд и клавиатур:', error);
+        throw error;
+    }
 };
 
 // Обработка сообщений
 bot.on('message', async (ctx) => {
+    // Логируем только нужные поля
+    console.log('Текст сообщения:', ctx.message?.text);
+    console.log('Payload:', ctx.message?.payload);
+    const state = await ctx.getState();
+    console.log('Состояние:', state);
+    console.log('ID пользователя:', ctx.peerId);
+
+    // Если состояние пустое или undefined, вызываем handleStart
+    if (!state) {
+        console.log('Состояние пустое, вызываем handleStart');
+        await handleStart(ctx);
+        return;
+    }
+    
+    // Проверяем payload
+    if (ctx.message?.payload) {
+        let payload = ctx.message.payload;
+        
+        try {
+            // В тестовом режиме payload может прийти как объект или строка
+            if (typeof payload === 'string') {
+                console.log('Исходный payload (строка):', payload);
+                try {
+                    payload = JSON.parse(payload);
+                } catch (error) {
+                    console.error('Ошибка парсинга JSON:', error);
+                }
+            }
+
+            // Обновляем payload в контексте
+            ctx.message.payload = payload;
+            console.log('Обработанный payload:', payload);
+
+            // Если это команда add_to_cart, обрабатываем
+            if (payload?.command === 'add_to_cart') {
+                await handleAddToCart(ctx);
+                return;
+            }
+        } catch (error) {
+            console.error('Ошибка обработки payload:', error);
+            return;
+        }
+    }
+
     // Получаем текст сообщения
     const text = (ctx.message?.text || '').toLowerCase();
-    console.log('Получено сообщение:', text);
 
     // Проверяем команды
     switch(text) {
@@ -435,29 +674,73 @@ bot.on('message', async (ctx) => {
             break;
         case COMMANDS.BACK:
             // Возвращаемся на шаг назад в зависимости от текущего состояния
-            const state = ctx.getState();
+            const state = await ctx.getState();
             if (state === 'categories') {
                 await handleStart(ctx);
-            } else if (state === 'pizza_selection') {
+            } else if (state.startsWith('pizza_selection:')) {
                 await handleDelivery(ctx);
+            } else if (state === 'payment') {
+                await handleDelivery(ctx);
+            } else {
+                await handleStart(ctx);
             }
             break;
         default:
             // Проверяем не является ли текст названием категории
             const categories = await getCategories();
-            const selectedCategory = categories.find(c => c.name.toLowerCase() === text);
-            if (selectedCategory) {
-                await handleCategory(ctx, selectedCategory.name);
-                return;
+            console.log('Проверка категории. Текст:', text);
+            console.log('Доступные категории:', categories.map(c => c.name));
+            
+            // Проверяем состояние
+            const userState = await ctx.getState();
+            console.log('Текущее состояние при выборе категории:', userState);
+            
+            if (userState === 'categories') {
+                // Приводим названия к нижнему регистру для сравнения
+                const selectedCategory = categories.find(c => 
+                    c.name.toLowerCase() === text || // Точное совпадение
+                    c.name === text // Совпадение с учетом регистра
+                );
+                
+                if (selectedCategory) {
+                    console.log('Найдена категория:', selectedCategory);
+                    await handleCategory(ctx, selectedCategory.name);
+                    return;
+                } else {
+                    console.log('Категория не найдена');
+                    // Отправляем сообщение о неверной категории
+                    await bot.sendText(
+                        ctx.peerId,
+                        'Извините, такой категории нет. Пожалуйста, выберите категорию из предложенных на клавиатуре.',
+                        'categories'
+                    );
+                }
             }
             
-            // Проверяем не выбрана ли пицца
-            const pizzas = await getPizzas();
-            const selectedPizza = pizzas.find(p => p.name.toLowerCase() === text);
-            if (selectedPizza) {
-                await handlePizzaSelection(ctx, selectedPizza.name);
-            } else {
-                // Если неизвестная команда, показываем приветствие
+            // Проверяем команду оплаты
+            if (text === COMMANDS.PAYMENT && userState === 'payment') {
+                console.log('Обработка команды "Перейти к оплате"');
+                // Очищаем корзину пользователя
+                const cartItems = (await bot.getAllDocuments('cart'))
+                    .filter(item => item.userId === ctx.peerId);
+                
+                console.log('Очистка корзины пользователя...');
+                for (const item of cartItems) {
+                    await bot.deleteDocument('cart', item._id);
+                }
+                console.log('Корзина очищена');
+
+                console.log('Отправка сообщения о завершении заказа...');
+                await bot.sendText(
+                    ctx.peerId,
+                    'Спасибо за заказ! Это демо-бот, поэтому оплата не требуется.',
+                    'main'
+                );
+                await ctx.setState('main');
+                console.log('Заказ завершен, установлено состояние main');
+            }
+            // Если неизвестная команда, показываем стартовое меню
+            else if (!state) {
                 await handleStart(ctx);
             }
     }
@@ -475,6 +758,108 @@ if (config.webInterface.enabled) {
         console.log(`Отладочный веб-интерфейс доступен на http://localhost:${config.webInterface.port}`);
     });
 }
+
+// Функция инициализации базы данных
+const initDatabase = async () => {
+    console.log('Инициализация базы данных...');
+    
+    // Очищаем коллекции с данными о пиццах
+    await bot.clearCollection('categories');
+    await bot.clearCollection('pizzas');
+    
+    // НЕ очищаем коллекции с данными пользователей
+    // await bot.clearCollection('user_states');
+    // await bot.clearCollection('cart');
+    
+    // Добавляем категории
+    const categories = [
+        { name: 'Классические', code: 'classic', color: 'primary' },
+        { name: 'Острые', code: 'spicy', color: 'negative' },
+        { name: 'Вегетарианские', code: 'vegetarian', color: 'positive' }
+    ];
+    
+    for (const category of categories) {
+        await bot.addDocument('categories', category);
+    }
+    
+    // Добавляем пиццы
+    const pizzas = [
+        // Классические пиццы
+        {
+            name: 'Маргарита',
+            description: 'Классическая пицца с томатным соусом и моцареллой',
+            price: 499,
+            image: 'https://i.imgur.com/kbYoRIJ.jpeg',
+            categoryId: 'classic'
+        },
+        {
+            name: 'Четыре сыра',
+            description: 'Пицца с моцареллой, горгонзолой, пармезаном и рикоттой',
+            price: 649,
+            image: 'https://i.imgur.com/qVxqVct.jpeg',
+            categoryId: 'classic'
+        },
+        {
+            name: 'Гавайская',
+            description: 'Пицца с ветчиной и ананасами',
+            price: 599,
+            image: 'https://i.imgur.com/YxgxwVX.jpeg',
+            categoryId: 'classic'
+        },
+        
+        // Острые пиццы
+        {
+            name: 'Пепперони',
+            description: 'Острая пицца с колбасой пепперони',
+            price: 599,
+            image: 'https://i.imgur.com/qVxqVct.jpeg',
+            categoryId: 'spicy'
+        },
+        {
+            name: 'Дьябло',
+            description: 'Острая пицца с халапеньо и острыми колбасками',
+            price: 649,
+            image: 'https://i.imgur.com/kbYoRIJ.jpeg',
+            categoryId: 'spicy'
+        },
+        {
+            name: 'Мексиканская',
+            description: 'Острая пицца с перцем чили и кукурузой',
+            price: 629,
+            image: 'https://i.imgur.com/YxgxwVX.jpeg',
+            categoryId: 'spicy'
+        },
+
+        // Вегетарианские пиццы
+        {
+            name: 'Овощная',
+            description: 'Пицца с грибами, перцем и томатами',
+            price: 549,
+            image: 'https://i.imgur.com/YxgxwVX.jpeg',
+            categoryId: 'vegetarian'
+        },
+        {
+            name: 'Грибная',
+            description: 'Пицца с разными видами грибов',
+            price: 579,
+            image: 'https://i.imgur.com/kbYoRIJ.jpeg',
+            categoryId: 'vegetarian'
+        },
+        {
+            name: 'Средиземноморская',
+            description: 'Пицца с оливками, томатами и базиликом',
+            price: 599,
+            image: 'https://i.imgur.com/qVxqVct.jpeg',
+            categoryId: 'vegetarian'
+        }
+    ];
+    
+    for (const pizza of pizzas) {
+        await bot.addDocument('pizzas', pizza);
+    }
+    
+    console.log('База данных инициализирована');
+};
 
 // Инициализация бота и запуск
 const start = async () => {

@@ -76,7 +76,7 @@
         <button
           v-for="button in row"
           :key="button.text"
-          @click="$emit('button-click', button)"
+          @click="handleButtonClick(button)"
           :class="[
             'flex-1 px-4 py-3 rounded-xl text-base font-medium transition-colors shadow-sm',
             {
@@ -156,6 +156,20 @@ const keyboardRows = computed(() => {
 })
 
 const emit = defineEmits(['send-message', 'button-click'])
+
+// Обработчик клика по кнопке
+const handleButtonClick = (button) => {
+  console.log('Клик по кнопке:', button)
+  console.log('Payload до сериализации:', button.payload)
+  // Передаем payload как есть, без сериализации
+  console.log('Передаем payload:', button.payload)
+  
+  emit('button-click', {
+    text: button.text,
+    payload: button.payload,
+    mode: 'test'
+  })
+}
 
 const messageText = ref('')
 const messagesContainer = ref(null)

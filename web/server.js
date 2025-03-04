@@ -14,7 +14,12 @@ class DebugServer {
 
         this.app = express();
         this.server = http.createServer(this.app);
-        this.io = new Server(this.server);
+        this.io = new Server(this.server, {
+            cors: {
+                origin: "http://localhost:3000",
+                methods: ["GET", "POST"]
+            }
+        });
         
         this.setupExpress();
         this.setupSocketHandlers();
@@ -103,7 +108,10 @@ class DebugServer {
                             console.log('Получение данных:', key, data);
                             return data;
                         },
-                        message: { text: data.text }
+                        message: { 
+                            text: data.text,
+                            payload: data.payload ? JSON.stringify(data.payload) : undefined
+                        }
                     };
 
                     // Перехватываем отправку сообщений для режима разработки
@@ -111,7 +119,12 @@ class DebugServer {
                     bot.sendText = async (peerId, text, keyboardName = 'main') => {
                         console.log('Отправка текста:', text);
                         const keyboardData = bot.keyboards.get(keyboardName);
-                        const keyboard = keyboardData ? this.formatKeyboard(keyboardData.buttons) : [];
+                        const keyboard = keyboardData ? keyboardData.buttons.map(btn => ({
+                            text: btn.text,
+                            color: btn.color,
+                            row: btn.row || 0,
+                            payload: btn.payload
+                        })) : [];
                         this.io.emit('bot:message', { 
                             text,
                             keyboard
@@ -134,15 +147,15 @@ class DebugServer {
                         // Отправляем сообщение с изображением
                         const keyboardData = keyboard ? bot.keyboards.get(keyboard) : null;
                         const formattedKeyboard = keyboardData ? this.formatKeyboard(keyboardData.buttons) : [];
-            this.io.emit('bot:media', {
-                type: 'image',
-                url: imgUrl,
-                mediaUrl: imgUrl,
-                text: text,
-                description: text,
-                mediaType: 'image',
-                keyboard: formattedKeyboard
-            });
+                        this.io.emit('bot:media', {
+                            type: 'image',
+                            url: imgUrl,
+                            mediaUrl: imgUrl,
+                            text: text,
+                            description: text,
+                            mediaType: 'image',
+                            keyboard: formattedKeyboard
+                        });
                     };
 
                     try {
@@ -182,7 +195,7 @@ class DebugServer {
             // Обработка нажатий на кнопки
             socket.on('user:button_click', (data) => {
                 if (data.mode === 'test') {
-                    console.log('Нажатие кнопки в тестовом режиме:', data.text);
+                    console.log('Нажатие кнопки в тестовом режиме:', data);
                     
                     // Создаем контекст для тестового режима
                     const testContext = {
@@ -207,7 +220,10 @@ class DebugServer {
                             console.log('Получение данных:', key, data);
                             return data;
                         },
-                        message: { text: data.text }
+                        message: { 
+                            text: data.text,
+                            payload: data.payload ? JSON.stringify(data.payload) : undefined
+                        }
                     };
 
                     // Перехватываем отправку сообщений для тестового режима
@@ -215,7 +231,7 @@ class DebugServer {
                     bot.sendText = async (peerId, text, keyboardName = 'main') => {
                         console.log('Отправка текста:', text);
                         const keyboardData = bot.keyboards.get(keyboardName);
-            const keyboard = keyboardData ? this.formatKeyboard(keyboardData.buttons) : [];
+                        const keyboard = keyboardData ? this.formatKeyboard(keyboardData.buttons) : [];
                         this.io.emit('bot:message', { 
                             text,
                             keyboard
@@ -235,18 +251,18 @@ class DebugServer {
                     bot.sendImgWithText = async (peerId, text, imgUrl, keyboard = null) => {
                         console.log('Отправка изображения с текстом:', imgUrl);
                         
-            // Отправляем сообщение с изображением
-            const keyboardData = keyboard ? bot.keyboards.get(keyboard) : null;
-            const formattedKeyboard = keyboardData ? this.formatKeyboard(keyboardData.buttons) : [];
-            this.io.emit('bot:media', {
-                type: 'image',
-                url: imgUrl,
-                mediaUrl: imgUrl,
-                text: text,
-                description: text,
-                mediaType: 'image',
-                keyboard: formattedKeyboard
-            });
+                        // Отправляем сообщение с изображением
+                        const keyboardData = keyboard ? bot.keyboards.get(keyboard) : null;
+                        const formattedKeyboard = keyboardData ? this.formatKeyboard(keyboardData.buttons) : [];
+                        this.io.emit('bot:media', {
+                            type: 'image',
+                            url: imgUrl,
+                            mediaUrl: imgUrl,
+                            text: text,
+                            description: text,
+                            mediaType: 'image',
+                            keyboard: formattedKeyboard
+                        });
                     };
 
                     try {
@@ -389,25 +405,12 @@ class DebugServer {
     }
 
     formatKeyboard(buttons) {
-        // Группируем кнопки по строкам
-        const rows = {};
-        buttons.forEach(btn => {
-            const rowIndex = btn.row || 0;
-            if (!rows[rowIndex]) {
-                rows[rowIndex] = [];
-            }
-            rows[rowIndex].push({
-                text: btn.text,
-                color: btn.color,
-                row: rowIndex
-            });
-        });
-
-        // Возвращаем плоский массив с информацией о строках
+        // Возвращаем массив с полной информацией о кнопках
         return buttons.map(btn => ({
             text: btn.text,
             color: btn.color,
-            row: btn.row || 0
+            row: btn.row || 0,
+            payload: btn.payload
         }));
     }
 

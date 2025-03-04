@@ -87,14 +87,18 @@ const sendMessage = (text) => {
 const handleButtonClick = (button) => {
   socket.value.emit('user:button_click', {
     text: button.text,
+    payload: button.payload,
     mode: 'test'
   })
-  log(`Нажата кнопка: ${button.text}`)
+  log(`Нажата кнопка: ${button.text}${button.payload ? ` с payload: ${JSON.stringify(button.payload)}` : ''}`)
 }
 
 // Инициализация сокета
 onMounted(() => {
-  socket.value = io()
+  socket.value = io({
+    path: '/socket.io',
+    transports: ['websocket', 'polling']
+  })
 
   socket.value.on('connect', () => {
     isConnected.value = true
