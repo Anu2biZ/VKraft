@@ -12,26 +12,9 @@ const registerCommands = require('./src/commands');
             dbUri: config.database.uri
         });
 
-        // Очищаем коллекции и добавляем тестовые данные
-        const data = require('./data/pizzas.js');
-        
-        console.log('Очистка коллекций...');
-        await bot.clearCollection('categories');
-        await bot.clearCollection('pizzas');
-        await bot.clearCollection('cart');
+        // Очищаем состояния пользователей при запуске
+        console.log('Очистка состояний...');
         await bot.clearCollection('user_states');
-
-        console.log('Добавление категорий...');
-        for (const category of data.categories) {
-            await bot.addDocument('categories', category);
-            console.log(`✓ Добавлена категория: ${category.name}`);
-        }
-
-        console.log('Добавление пицц...');
-        for (const pizza of data.pizzas) {
-            await bot.addDocument('pizzas', pizza);
-            console.log(`✓ Добавлена пицца: ${pizza.name}`);
-        }
 
         // Регистрируем сцены и команды
         registerScenes(bot);

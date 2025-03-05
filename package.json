@@ -12,9 +12,12 @@
   "scripts": {
     "dev:delivery": "concurrently \"npm run dev:web\" \"cross-env NODE_ENV=development node projects/delivery/index.js\"",
     "prod:delivery": "cross-env NODE_ENV=production node projects/delivery/index.js",
+    "dev:template": "concurrently \"npm run dev:web\" \"cross-env NODE_ENV=development node projects/template/index.js\"",
+    "prod:template": "cross-env NODE_ENV=production node projects/template/index.js",
     "dev:web": "vite",
     "build": "vite build",
-    "init:db": "node projects/delivery/data/init-db.js"
+    "init:db": "node projects/delivery/data/init-db.js",
+    "init:template-db": "node projects/template/data/init-db.js"
   },
   "keywords": [
     "vk",
