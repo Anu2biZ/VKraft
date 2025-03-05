@@ -80,7 +80,7 @@ class DebugServer {
             });
 
             // Обработка сообщений от пользователя
-            socket.on('user:message', (data) => {
+            socket.on('user:message', async (data) => {
                 console.log(`Получено сообщение в режиме ${bot.getMode()}:`, data.text);
                 
                 if (bot.getMode() === 'development') {
@@ -90,12 +90,12 @@ class DebugServer {
                         text: data.text,
                         peerId: 1,
                         senderId: 1,
-                        setState: (state) => {
+                        setState: async (state) => {
                             console.log('Установка состояния:', state);
-                            bot.setState(1, state);
+                            return await bot.setState(1, state);
                         },
-                        getState: () => {
-                            const state = bot.getState(1);
+                        getState: async () => {
+                            const state = await bot.getState(1);
                             console.log('Текущее состояние:', state);
                             return state;
                         },
@@ -110,7 +110,7 @@ class DebugServer {
                         },
                         message: { 
                             text: data.text,
-                            payload: data.payload ? JSON.stringify(data.payload) : undefined
+                            payload: data.payload
                         }
                     };
 
@@ -127,7 +127,7 @@ class DebugServer {
                         })) : [];
                         this.io.emit('bot:message', { 
                             text,
-                            keyboard
+                            keyboard: this.formatKeyboard(keyboardData?.buttons || [])
                         });
                     };
 
@@ -167,7 +167,7 @@ class DebugServer {
 
                         // Эмулируем получение сообщения ботом
                         console.log('Эмуляция сообщения...');
-                        bot.emit('message', testContext);
+                        await bot.handleMessage(testContext);
                         console.log('Сообщение обработано');
                     } catch (error) {
                         console.error('Ошибка при обработке сообщения:', error);
@@ -193,7 +193,7 @@ class DebugServer {
             });
 
             // Обработка нажатий на кнопки
-            socket.on('user:button_click', (data) => {
+            socket.on('user:button_click', async (data) => {
                 if (data.mode === 'test') {
                     console.log('Нажатие кнопки в тестовом режиме:', data);
                     
@@ -202,12 +202,12 @@ class DebugServer {
                         text: data.text,
                         peerId: 1,
                         senderId: 1,
-                        setState: (state) => {
+                        setState: async (state) => {
                             console.log('Установка состояния:', state);
-                            bot.setState(1, state);
+                            return await bot.setState(1, state);
                         },
-                        getState: () => {
-                            const state = bot.getState(1);
+                        getState: async () => {
+                            const state = await bot.getState(1);
                             console.log('Текущее состояние:', state);
                             return state;
                         },
@@ -222,7 +222,7 @@ class DebugServer {
                         },
                         message: { 
                             text: data.text,
-                            payload: data.payload ? JSON.stringify(data.payload) : undefined
+                            payload: data.payload
                         }
                     };
 
@@ -231,10 +231,9 @@ class DebugServer {
                     bot.sendText = async (peerId, text, keyboardName = 'main') => {
                         console.log('Отправка текста:', text);
                         const keyboardData = bot.keyboards.get(keyboardName);
-                        const keyboard = keyboardData ? this.formatKeyboard(keyboardData.buttons) : [];
                         this.io.emit('bot:message', { 
                             text,
-                            keyboard
+                            keyboard: this.formatKeyboard(keyboardData?.buttons || [])
                         });
                     };
 
@@ -274,7 +273,7 @@ class DebugServer {
 
                         // Эмулируем получение сообщения ботом
                         console.log('Эмуляция нажатия кнопки...');
-                        bot.emit('message', testContext);
+                        await bot.handleMessage(testContext);
                         console.log('Кнопка обработана');
                     } catch (error) {
                         console.error('Ошибка при обработке кнопки:', error);
@@ -303,6 +302,10 @@ class DebugServer {
             // Получение списка коллекций
             socket.on('db:get_collections', async () => {
                 try {
+                    // Ждем инициализации базы данных
+                    if (!bot.db) {
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
                     const collections = await bot.getCollections();
                     socket.emit('db:collections', collections);
                 } catch (error) {
@@ -314,6 +317,10 @@ class DebugServer {
             // Получение содержимого коллекции
             socket.on('db:get_documents', async (collectionName) => {
                 try {
+                    // Ждем инициализации базы данных
+                    if (!bot.db) {
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
                     const documents = await bot.getAllDocuments(collectionName);
                     socket.emit('db:documents', {
                         collection: collectionName,
@@ -355,10 +362,9 @@ class DebugServer {
         bot.sendText = async (peerId, text, keyboardName = 'main') => {
             await originalSendText.call(bot, peerId, text, keyboardName);
             const keyboardData = bot.keyboards.get(keyboardName);
-            const keyboard = keyboardData ? this.formatKeyboard(keyboardData.buttons) : [];
             this.io.emit('bot:message', { 
                 text,
-                keyboard
+                keyboard: this.formatKeyboard(keyboardData?.buttons || [])
             });
         };
 

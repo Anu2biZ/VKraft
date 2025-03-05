@@ -15,7 +15,8 @@
     "prod:echo": "cross-env NODE_ENV=production node examples/echo-bot.js",
     "prod:delivery": "cross-env NODE_ENV=production node examples/delivery.js",
     "dev:web": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "init:db": "node examples/data/init-db.js"
   },
   "keywords": [
     "vk",
