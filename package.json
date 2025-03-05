@@ -17,7 +17,8 @@
     "dev:web": "vite",
     "build": "vite build",
     "init:db": "node projects/delivery/data/init-db.js",
-    "init:template-db": "node projects/template/data/init-db.js"
+    "init:template-db": "node projects/template/data/init-db.js",
+    "scene-builder": "concurrently \"VITE_PORT=3000 npm run dev:web\" \"cross-env NODE_ENV=development PORT=3005 SCENE_BUILDER=true node projects/delivery/index.js\""
   },
   "keywords": [
     "vk",

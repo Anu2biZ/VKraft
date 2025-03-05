@@ -27,6 +27,7 @@
         @clear="consoleMessages = []" 
       />
       <DatabasePanel v-show="activeTab === 'db'" />
+      <SceneBuilder v-show="activeTab === 'scenes'" />
     </div>
 
     <!-- Чат -->
@@ -50,6 +51,7 @@ import { io } from 'socket.io-client'
 import ConsolePanel from './components/ConsolePanel.vue'
 import DatabasePanel from './components/DatabasePanel.vue'
 import ChatContainer from './components/ChatContainer.vue'
+import SceneBuilder from './components/SceneBuilder.vue'
 
 // Состояние
 const socket = ref(null)
@@ -66,7 +68,8 @@ const botInfo = ref({
 
 const tabs = [
   { id: 'console', name: 'Консоль' },
-  { id: 'db', name: 'База данных' }
+  { id: 'db', name: 'База данных' },
+  { id: 'scenes', name: 'Конструктор сцен' }
 ]
 
 // Методы
@@ -153,6 +156,19 @@ onMounted(() => {
     }
     if (info.scriptName) {
       log(`Запущен скрипт: ${info.scriptName}`)
+    }
+  })
+
+  // События для конструктора сцен
+  socket.value.on('scenes:list', (scenes) => {
+    // Обработка списка сцен
+  })
+
+  socket.value.on('scenes:save', (result) => {
+    if (result.success) {
+      log('Сцены успешно сохранены')
+    } else {
+      log('Ошибка при сохранении сцен: ' + result.error)
     }
   })
 })

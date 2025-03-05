@@ -1,0 +1,344 @@
+{
+  "scenes": [
+    {
+      "name": "main",
+      "enterMessage": "👋 Добро пожаловать в пиццерию!\n\nЯ помогу вам выбрать и заказать вкусную пиццу. Что вы хотите сделать?",
+      "keyboard": [
+        [
+          {
+            "text": "🍕 Меню",
+            "color": "primary",
+            "payload": {
+              "action": "navigate",
+              "to": "categories"
+            }
+          }
+        ],
+        [
+          {
+            "text": "🛒 Корзина",
+            "color": "positive",
+            "payload": {
+              "action": "navigate",
+              "to": "cart"
+            }
+          },
+          {
+            "text": "❓ Помощь",
+            "color": "secondary",
+            "payload": {
+              "action": "navigate",
+              "to": "help"
+            }
+          }
+        ]
+      ],
+      "transitions": [
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"navigate\",\"to\":\"categories\"}",
+          "targetScene": "categories"
+        },
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"navigate\",\"to\":\"cart\"}",
+          "targetScene": "cart"
+        },
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"navigate\",\"to\":\"help\"}",
+          "targetScene": "help"
+        }
+      ]
+    },
+    {
+      "name": "categories",
+      "enterMessage": "Выберите категорию пиццы:",
+      "keyboard": [
+        [
+          {
+            "text": "🌶 Острые",
+            "color": "primary",
+            "payload": {
+              "action": "select_category",
+              "category": "spicy"
+            }
+          },
+          {
+            "text": "🧀 Сырные",
+            "color": "primary",
+            "payload": {
+              "action": "select_category",
+              "category": "cheese"
+            }
+          }
+        ],
+        [
+          {
+            "text": "🥩 Мясные",
+            "color": "primary",
+            "payload": {
+              "action": "select_category",
+              "category": "meat"
+            }
+          },
+          {
+            "text": "🥗 Вегетарианские",
+            "color": "primary",
+            "payload": {
+              "action": "select_category",
+              "category": "veggie"
+            }
+          }
+        ],
+        [
+          {
+            "text": "◀️ Назад",
+            "color": "secondary",
+            "payload": {
+              "action": "navigate",
+              "to": "main"
+            }
+          }
+        ]
+      ],
+      "transitions": [
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"select_category\"}",
+          "targetScene": "pizza_list"
+        },
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"navigate\",\"to\":\"main\"}",
+          "targetScene": "main"
+        }
+      ]
+    },
+    {
+      "name": "pizza_list",
+      "enterMessage": "Вот наши пиццы в этой категории:",
+      "keyboard": [
+        [
+          {
+            "text": "🛒 В корзину",
+            "color": "positive",
+            "payload": {
+              "action": "add_to_cart",
+              "product_id": "pizza_1"
+            }
+          }
+        ],
+        [
+          {
+            "text": "◀️ К категориям",
+            "color": "secondary",
+            "payload": {
+              "action": "navigate",
+              "to": "categories"
+            }
+          },
+          {
+            "text": "🏠 Главное меню",
+            "color": "secondary",
+            "payload": {
+              "action": "navigate",
+              "to": "main"
+            }
+          }
+        ]
+      ],
+      "transitions": [
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"add_to_cart\"}",
+          "targetScene": "pizza_list"
+        },
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"navigate\",\"to\":\"categories\"}",
+          "targetScene": "categories"
+        },
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"navigate\",\"to\":\"main\"}",
+          "targetScene": "main"
+        }
+      ]
+    },
+    {
+      "name": "cart",
+      "enterMessage": "🛒 Ваша корзина:\n\nДля оформления заказа нажмите «Оформить заказ»",
+      "keyboard": [
+        [
+          {
+            "text": "✅ Оформить заказ",
+            "color": "positive",
+            "payload": {
+              "action": "navigate",
+              "to": "checkout"
+            }
+          }
+        ],
+        [
+          {
+            "text": "🗑 Очистить корзину",
+            "color": "negative",
+            "payload": {
+              "action": "clear_cart"
+            }
+          },
+          {
+            "text": "◀️ Назад",
+            "color": "secondary",
+            "payload": {
+              "action": "navigate",
+              "to": "main"
+            }
+          }
+        ]
+      ],
+      "transitions": [
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"navigate\",\"to\":\"checkout\"}",
+          "targetScene": "checkout"
+        },
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"clear_cart\"}",
+          "targetScene": "cart"
+        },
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"navigate\",\"to\":\"main\"}",
+          "targetScene": "main"
+        }
+      ]
+    },
+    {
+      "name": "checkout",
+      "enterMessage": "📝 Оформление заказа\n\nВведите адрес доставки:",
+      "keyboard": [
+        [
+          {
+            "text": "✅ Подтвердить заказ",
+            "color": "positive",
+            "payload": {
+              "action": "confirm_order"
+            }
+          }
+        ],
+        [
+          {
+            "text": "◀️ Вернуться в корзину",
+            "color": "secondary",
+            "payload": {
+              "action": "navigate",
+              "to": "cart"
+            }
+          }
+        ]
+      ],
+      "transitions": [
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"confirm_order\"}",
+          "targetScene": "order_confirmed"
+        },
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"navigate\",\"to\":\"cart\"}",
+          "targetScene": "cart"
+        }
+      ]
+    },
+    {
+      "name": "order_confirmed",
+      "enterMessage": "🎉 Спасибо за заказ!\n\nВаш заказ принят в обработку. Мы свяжемся с вами в ближайшее время для подтверждения.",
+      "keyboard": [
+        [
+          {
+            "text": "🏠 На главную",
+            "color": "primary",
+            "payload": {
+              "action": "navigate",
+              "to": "main"
+            }
+          }
+        ]
+      ],
+      "transitions": [
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"navigate\",\"to\":\"main\"}",
+          "targetScene": "main"
+        }
+      ]
+    },
+    {
+      "name": "help",
+      "enterMessage": "❓ Помощь\n\nЗдесь вы можете узнать:\n- Как сделать заказ\n- Способы оплаты\n- Зоны доставки\n- Время работы\n\nВыберите интересующий вас вопрос:",
+      "keyboard": [
+        [
+          {
+            "text": "📦 Как заказать",
+            "color": "primary",
+            "payload": {
+              "action": "show_help",
+              "topic": "how_to_order"
+            }
+          },
+          {
+            "text": "💳 Оплата",
+            "color": "primary",
+            "payload": {
+              "action": "show_help",
+              "topic": "payment"
+            }
+          }
+        ],
+        [
+          {
+            "text": "🚚 Доставка",
+            "color": "primary",
+            "payload": {
+              "action": "show_help",
+              "topic": "delivery"
+            }
+          },
+          {
+            "text": "⏰ Время работы",
+            "color": "primary",
+            "payload": {
+              "action": "show_help",
+              "topic": "working_hours"
+            }
+          }
+        ],
+        [
+          {
+            "text": "◀️ На главную",
+            "color": "secondary",
+            "payload": {
+              "action": "navigate",
+              "to": "main"
+            }
+          }
+        ]
+      ],
+      "transitions": [
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"show_help\"}",
+          "targetScene": "help"
+        },
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"navigate\",\"to\":\"main\"}",
+          "targetScene": "main"
+        }
+      ]
+    }
+  ]
+}

@@ -4,6 +4,7 @@ const path = require('path');
 const { Server } = require('socket.io');
 const { bot } = require('../lib/index.js');
 const config = require('../lib/config');
+const SceneManager = require('./scene-manager');
 
 class DebugServer {
     constructor() {
@@ -11,6 +12,8 @@ class DebugServer {
         if (!config.webInterface.enabled && config.mode === 'production') {
             throw new Error('Веб-интерфейс отключен в production режиме');
         }
+
+        this.sceneManager = new SceneManager();
 
         this.app = express();
         this.server = http.createServer(this.app);
@@ -351,6 +354,33 @@ class DebugServer {
                 } catch (error) {
                     console.error('Ошибка удаления коллекции:', error);
                     socket.emit('db:error', `Ошибка удаления коллекции ${collectionName}`);
+                }
+            });
+
+            // Получение списка сцен
+            socket.on('scenes:get_list', async () => {
+                try {
+                    const scenes = await this.sceneManager.loadScenes();
+                    socket.emit('scenes:list', scenes);
+                } catch (error) {
+                    console.error('Ошибка загрузки сцен:', error);
+                    socket.emit('scenes:error', 'Ошибка загрузки списка сцен');
+                }
+            });
+
+            // Сохранение сцен
+            socket.on('scenes:save', async (scenes) => {
+                try {
+                    const result = await this.sceneManager.saveScenes(scenes);
+                    socket.emit('scenes:save_result', result);
+                    if (result.success) {
+                        console.log('Сцены успешно сохранены');
+                    } else {
+                        console.error('Ошибка при сохранении сцен:', result.error);
+                    }
+                } catch (error) {
+                    console.error('Ошибка сохранения сцен:', error);
+                    socket.emit('scenes:error', 'Ошибка сохранения сцен');
                 }
             });
         });

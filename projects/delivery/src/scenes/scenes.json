@@ -1,0 +1,248 @@
+{
+  "scenes": [
+    {
+      "name": "main",
+      "enterMessage": "Добро пожаловать в пиццерию! Я помогу вам сделать заказ.",
+      "keyboard": [
+        [
+          {
+            "text": "доставка",
+            "color": "primary",
+            "payload": {
+              "action": "navigate",
+              "to": "categories"
+            }
+          }
+        ],
+        [
+          {
+            "text": "помощь",
+            "color": "secondary",
+            "payload": {
+              "action": "show_help"
+            }
+          }
+        ]
+      ],
+      "transitions": [
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"navigate\",\"to\":\"categories\"}",
+          "targetScene": "categories"
+        },
+        {
+          "trigger": "text",
+          "value": "доставка",
+          "targetScene": "categories"
+        },
+        {
+          "trigger": "command",
+          "value": "help",
+          "targetScene": "main"
+        }
+      ]
+    },
+    {
+      "name": "categories",
+      "enterMessage": "Выберите категорию пиццы:",
+      "keyboard": [
+        [
+          {
+            "text": "🌶 Острые",
+            "color": "primary",
+            "payload": {
+              "action": "select_category",
+              "category": "spicy"
+            }
+          },
+          {
+            "text": "🧀 Сырные",
+            "color": "primary",
+            "payload": {
+              "action": "select_category",
+              "category": "cheese"
+            }
+          }
+        ],
+        [
+          {
+            "text": "🥩 Мясные",
+            "color": "primary",
+            "payload": {
+              "action": "select_category",
+              "category": "meat"
+            }
+          },
+          {
+            "text": "🥗 Вегетарианские",
+            "color": "primary",
+            "payload": {
+              "action": "select_category",
+              "category": "veggie"
+            }
+          }
+        ],
+        [
+          {
+            "text": "🛒 Корзина",
+            "color": "positive",
+            "payload": {
+              "action": "navigate",
+              "to": "payment"
+            }
+          },
+          {
+            "text": "◀️ Назад",
+            "color": "secondary",
+            "payload": {
+              "action": "navigate",
+              "to": "main"
+            }
+          }
+        ]
+      ],
+      "transitions": [
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"select_category\"}",
+          "targetScene": "pizza_selection"
+        },
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"navigate\",\"to\":\"payment\"}",
+          "targetScene": "payment"
+        },
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"navigate\",\"to\":\"main\"}",
+          "targetScene": "main"
+        }
+      ]
+    },
+    {
+      "name": "pizza_selection",
+      "enterMessage": "Доступные пиццы в этой категории:",
+      "keyboard": [
+        [
+          {
+            "text": "🛒 Добавить в корзину",
+            "color": "positive",
+            "payload": {
+              "action": "add_to_cart",
+              "pizzaId": "{pizza_id}"
+            }
+          }
+        ],
+        [
+          {
+            "text": "🛒 Оформить заказ",
+            "color": "primary",
+            "payload": {
+              "action": "navigate",
+              "to": "payment"
+            }
+          }
+        ],
+        [
+          {
+            "text": "◀️ К категориям",
+            "color": "secondary",
+            "payload": {
+              "action": "navigate",
+              "to": "categories"
+            }
+          }
+        ]
+      ],
+      "transitions": [
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"add_to_cart\"}",
+          "targetScene": "pizza_selection"
+        },
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"navigate\",\"to\":\"payment\"}",
+          "targetScene": "payment"
+        },
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"navigate\",\"to\":\"categories\"}",
+          "targetScene": "categories"
+        }
+      ]
+    },
+    {
+      "name": "payment",
+      "enterMessage": "🛒 Ваш заказ:\n\nДля оформления заказа нажмите «Оплатить»",
+      "keyboard": [
+        [
+          {
+            "text": "💳 Оплатить",
+            "color": "positive",
+            "payload": {
+              "action": "pay"
+            }
+          }
+        ],
+        [
+          {
+            "text": "🗑 Очистить корзину",
+            "color": "negative",
+            "payload": {
+              "action": "clear_cart"
+            }
+          },
+          {
+            "text": "◀️ Продолжить покупки",
+            "color": "secondary",
+            "payload": {
+              "action": "navigate",
+              "to": "categories"
+            }
+          }
+        ]
+      ],
+      "transitions": [
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"pay\"}",
+          "targetScene": "order_confirmed"
+        },
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"clear_cart\"}",
+          "targetScene": "payment"
+        },
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"navigate\",\"to\":\"categories\"}",
+          "targetScene": "categories"
+        }
+      ]
+    },
+    {
+      "name": "order_confirmed",
+      "enterMessage": "✅ Спасибо за заказ!\n\nЭто демо-бот, поэтому оплата не требуется.\nДля нового заказа вернитесь в главное меню.",
+      "keyboard": [
+        [
+          {
+            "text": "🏠 В главное меню",
+            "color": "primary",
+            "payload": {
+              "action": "navigate",
+              "to": "main"
+            }
+          }
+        ]
+      ],
+      "transitions": [
+        {
+          "trigger": "payload",
+          "value": "{\"action\":\"navigate\",\"to\":\"main\"}",
+          "targetScene": "main"
+        }
+      ]
+    }
+  ]
+}
