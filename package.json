@@ -6,17 +6,15 @@
   "files": [
     "lib/",
     "web/",
-    "examples/",
+    "projects/",
     "README.md"
   ],
   "scripts": {
-    "dev:echo": "concurrently \"npm run dev:web\" \"cross-env NODE_ENV=development node examples/echo-bot.js\"",
-    "dev:delivery": "concurrently \"npm run dev:web\" \"cross-env NODE_ENV=development node examples/delivery.js\"",
-    "prod:echo": "cross-env NODE_ENV=production node examples/echo-bot.js",
-    "prod:delivery": "cross-env NODE_ENV=production node examples/delivery.js",
+    "dev:delivery": "concurrently \"npm run dev:web\" \"cross-env NODE_ENV=development node projects/delivery/index.js\"",
+    "prod:delivery": "cross-env NODE_ENV=production node projects/delivery/index.js",
     "dev:web": "vite",
     "build": "vite build",
-    "init:db": "node examples/data/init-db.js"
+    "init:db": "node projects/delivery/data/init-db.js"
   },
   "keywords": [
     "vk",

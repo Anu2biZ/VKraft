@@ -1,6 +1,6 @@
-const { bot } = require('../lib/index.js');
-const DebugServer = require('../web/server.js');
-const config = require('../lib/config');
+const { bot } = require('../../lib/index.js');
+const DebugServer = require('../../web/server.js');
+const config = require('../../lib/config');
 
 // Определяем команды
 const COMMANDS = {
